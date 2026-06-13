@@ -52,4 +52,5 @@ class UserProfileOut(CamelModel):
     glyph: str
     created_at: datetime
     artifact_count: int
+    adept_count: int
     artifacts: list

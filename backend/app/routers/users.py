@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -21,12 +21,16 @@ def get_profile(username: str, db: Session = Depends(get_db)) -> dict:
         .where(Artifact.created_by_id == user.id, Artifact.status == STATUS_SELLADO)
         .order_by(Artifact.created_at.desc())
     ).all()
+    adept_count = db.scalar(
+        select(func.count(User.id)).where(User.invited_by_id == user.id)
+    ) or 0
     return {
         "username": user.username,
         "role": user.role,
         "glyph": user.glyph,
         "created_at": user.created_at,
         "artifact_count": len(artifacts),
+        "adept_count": adept_count,
         "artifacts": [
             ArtifactOut.model_validate({**a.__dict__, "user_reaction": None, "note_count": 0})
             for a in artifacts

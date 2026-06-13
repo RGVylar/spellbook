@@ -98,6 +98,10 @@
 					<span class="muted" style="font-size: 12.5px">inscrito {arcaneTime(profile.createdAt)}</span>
 					<span class="dot"></span>
 					<span class="muted" style="font-size: 12.5px">{profile.artifactCount} artefacto{profile.artifactCount !== 1 ? 's' : ''}</span>
+					{#if profile.adeptCount > 0}
+						<span class="dot"></span>
+						<span class="muted" style="font-size: 12.5px">{profile.adeptCount} adepto{profile.adeptCount !== 1 ? 's' : ''}</span>
+					{/if}
 				</div>
 			</div>
 			{#if isOwn}

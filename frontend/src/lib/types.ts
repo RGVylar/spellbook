@@ -53,6 +53,7 @@ export interface UserProfile {
 	glyph: string;
 	createdAt: string;
 	artifactCount: number;
+	adeptCount: number;
 	artifacts: Artifact[];
 }
 
