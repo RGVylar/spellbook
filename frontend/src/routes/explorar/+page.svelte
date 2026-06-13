@@ -13,7 +13,7 @@
 	let schools = $state<string[]>(
 		page.url.searchParams.get('school') ? [page.url.searchParams.get('school')!] : []
 	);
-	let runes = $state<string[]>([]);
+	let runes = $state<string[]>(page.url.searchParams.get('rune') ? [page.url.searchParams.get('rune')!] : []);
 
 	function toggle(arr: string[], v: string): string[] {
 		return arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
