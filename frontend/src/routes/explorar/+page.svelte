@@ -14,21 +14,30 @@
 		page.url.searchParams.get('school') ? [page.url.searchParams.get('school')!] : []
 	);
 	let runes = $state<string[]>(page.url.searchParams.get('rune') ? [page.url.searchParams.get('rune')!] : []);
+	let eras = $state<number[]>(page.url.searchParams.get('era') ? [Number(page.url.searchParams.get('era'))] : []);
 
 	function toggle(arr: string[], v: string): string[] {
 		return arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
 	}
+	function toggleNum(arr: number[], v: number): number[] {
+		return arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
+	}
+
+	const availableEras = $derived(
+		[...new Set(catalog.artifacts.map((a) => a.era))].sort((a, b) => b - a)
+	);
 
 	const filtered = $derived(
 		catalog.artifacts.filter(
 			(a) =>
 				(types.length === 0 || types.includes(a.type)) &&
 				(schools.length === 0 || schools.includes(a.school)) &&
-				(runes.length === 0 || runes.some((r) => a.runes.includes(r)))
+				(runes.length === 0 || runes.some((r) => a.runes.includes(r))) &&
+				(eras.length === 0 || eras.includes(a.era))
 		)
 	);
 
-	const hasFilters = $derived(types.length > 0 || schools.length > 0 || runes.length > 0);
+	const hasFilters = $derived(types.length > 0 || schools.length > 0 || runes.length > 0 || eras.length > 0);
 </script>
 
 <svelte:head><title>Explorador · SPELLBOOK</title></svelte:head>
@@ -79,6 +88,24 @@
 				{/each}
 			</div>
 			<div class="fgroup">
+				<h4>Época</h4>
+				{#each availableEras as era (era)}
+					<div
+						class="fitem cursor-star"
+						class:on={eras.includes(era)}
+						role="checkbox"
+						aria-checked={eras.includes(era)}
+						tabindex="0"
+						onclick={() => (eras = toggleNum(eras, era))}
+						onkeydown={(e) => e.key === 'Enter' && (eras = toggleNum(eras, era))}
+					>
+						<span class="fcheck">{#if eras.includes(era)}<Icon name="check" s={12} />{/if}</span>
+						{era}
+						<span class="fcount">{catalog.artifacts.filter((a) => a.era === era).length}</span>
+					</div>
+				{/each}
+			</div>
+			<div class="fgroup">
 				<h4>Runas</h4>
 				<RuneCloud runes={catalog.runes.slice(0, 12)} active={runes} onToggle={(r) => (runes = toggle(runes, r))} />
 			</div>
@@ -97,6 +124,7 @@
 								types = [];
 								schools = [];
 								runes = [];
+								eras = [];
 							}}
 						>
 							limpiar
