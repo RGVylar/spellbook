@@ -1,0 +1,24 @@
+[Unit]
+Description=Spellbook backend (FastAPI)
+After=network.target postgresql.service
+Requires=postgresql.service
+
+[Service]
+Type=simple
+User=spellbook
+Group=spellbook
+WorkingDirectory=/opt/spellbook/backend
+EnvironmentFile=/opt/spellbook/backend/.env
+ExecStart=/opt/spellbook/backend/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8001
+Restart=on-failure
+RestartSec=3
+Environment=PYTHONUNBUFFERED=1
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/spellbook
+
+[Install]
+WantedBy=multi-user.target

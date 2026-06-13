@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+backend/.env
+backend/*.db
+
+# Node / SvelteKit
+node_modules/
+frontend/.svelte-kit/
+frontend/build/
+
+# Media preservada (no va al repo)
+media/*
+!media/.gitkeep
+
+# Design handoff (referencia local)
+_handoff/
+
+# OS
+.DS_Store
+Thumbs.db
