@@ -34,6 +34,8 @@
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
+		object-position: center;
+		transform: scale(1.15);
 		opacity: 0.28;
 		pointer-events: none;
 	}
