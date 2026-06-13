@@ -48,7 +48,7 @@
 
 	{#if !auth.isModerator}
 		<div class="glass" style="padding: 40px; text-align: center; border-radius: var(--r-lg); color: var(--muted)">
-			Solo magos y el Archimago participan del juicio.
+			Solo magos y el <span class="archimago">Archimago</span> participan del juicio.
 		</div>
 	{:else if loading}
 		<p class="t-arcane" style="font-size: 22px; color: var(--gold); text-align: center; padding: 40px 0">

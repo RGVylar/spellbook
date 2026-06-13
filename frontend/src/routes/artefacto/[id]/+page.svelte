@@ -15,6 +15,7 @@
 	import { player } from '$lib/stores/player.svelte';
 	import { TYPE_META, type Artifact, type Note } from '$lib/types';
 	import { arcaneTime } from '$lib/utils';
+	import { arcaneHtml } from '$lib/arcane-text';
 
 	const id = $derived(page.params.id ?? '');
 
@@ -184,7 +185,7 @@
 				</div>
 
 				<h3 class="t-arcane" style="font-size: 21px; margin: 0 0 10px">Del códice</h3>
-				<p class="lede illuminate" style="font-size: 16.5px">{art.desc}</p>
+				<p class="lede illuminate" style="font-size: 16.5px">{@html arcaneHtml(art.desc)}</p>
 
 				{#if variants.length > 0}
 					<div style="margin-top: 36px">
@@ -243,7 +244,7 @@
 								<div class="row gap-2">
 									<span class="nwho">{n.who}</span><span class="nwhen">· {arcaneTime(n.when)}</span>
 								</div>
-								<div class="ntext">{n.text}</div>
+								<div class="ntext">{@html arcaneHtml(n.text)}</div>
 							</div>
 						</div>
 					{/each}
@@ -282,13 +283,13 @@
 				{/if}
 				<div class="glass" style="border-radius: var(--r-lg); padding: 20px; margin-bottom: 22px">
 					<div class="eyebrow" style="margin-bottom: 14px">Inscripción</div>
-					{#each [['Época', String(art.era)], ['Escuela', school?.name ?? art.school], ['Naturaleza', TYPE_META[art.type]?.label ?? art.type], ['Sellado por', art.sealedBy]] as [k, v] (k)}
+					{#each [['Época', String(art.era)], ['Escuela', school?.name ?? art.school], ['Naturaleza', TYPE_META[art.type]?.label ?? art.type], ['Sellado por', art.sealedBy]] as [k, v] (k + v)}
 						<div
 							class="row"
 							style="justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed rgba(201,168,76,.12)"
 						>
 							<span class="muted" style="font-size: 12.5px">{k}</span>
-							<span style="font-size: 13.5px; font-weight: 600; color: var(--parchment)">{v}</span>
+							<span style="font-size: 13.5px; font-weight: 600; color: var(--parchment)">{@html arcaneHtml(v)}</span>
 						</div>
 					{/each}
 					<div style="padding-top: 14px">

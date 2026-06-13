@@ -173,7 +173,7 @@
 				«{done.title}» ha sido inscrito en el Grimorio bajo la escuela de {catalog.school(done.school)?.name}. Que
 				perdure mil años.
 			{:else}
-				«{done.title}» aguarda el juicio del cónclave. Un mago o el Archimago decidirá si merece el sello.
+				«{done.title}» aguarda el juicio del cónclave. Un mago o el <span class="archimago">Archimago</span> decidirá si merece el sello.
 			{/if}
 		</p>
 		<div class="row gap-3" style="justify-content: center">
@@ -227,7 +227,7 @@
 				<div style="flex: 1">
 					<div style="font-weight: 650; font-size: 14px">Tu propuesta pasará por el juicio del cónclave</div>
 					<div class="muted" style="font-size: 12.5px">
-						Como aprendiz propones artefactos; un mago o el Archimago los aprueba. Con la edad y las obras llegará tu
+						Como aprendiz propones artefactos; un mago o el <span class="archimago">Archimago</span> los aprueba. Con la edad y las obras llegará tu
 						ascenso.
 					</div>
 				</div>
