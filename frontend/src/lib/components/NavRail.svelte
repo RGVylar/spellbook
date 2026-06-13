@@ -47,11 +47,14 @@
 			{/if}
 		{/each}
 		{#if auth.isModerator}
-			<a class="navlink cursor-star" class:active={isActive('/moderar')} href="/moderar">
+			<a class="navlink cursor-star" class:active={page.url.pathname === '/moderar'} href="/moderar">
 				<Icon name="seal" s={19} />Propuestas
 				{#if moderation.pendingCount > 0}
 					<span class="pending-badge">{moderation.pendingCount}</span>
 				{/if}
+			</a>
+			<a class="navlink cursor-star" class:active={isActive('/moderar/huerfanos')} href="/moderar/huerfanos">
+				<Icon name="upload" s={19} />Sin preservar
 			</a>
 		{/if}
 	</nav>
