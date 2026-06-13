@@ -94,7 +94,7 @@
 				</div>
 				<div>
 					<div style="font-size: 20px; font-weight: 650">{auth.user.username}</div>
-					<div class="eyebrow" style="margin-top: 4px">{ROLE_LABEL[auth.user.role]}</div>
+					<div class="eyebrow" style="margin-top: 4px" class:archimago={auth.user.role === 'archimago'}>{ROLE_LABEL[auth.user.role]}</div>
 				</div>
 			</div>
 			<p class="muted" style="font-size: 13px; line-height: 1.6; margin: 0 0 8px">{ROLE_DESC[auth.user.role]}</p>

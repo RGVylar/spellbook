@@ -9,6 +9,7 @@
 	import RuneCloud from '$lib/components/RuneCloud.svelte';
 	import SpellCard from '$lib/components/SpellCard.svelte';
 	import Viz from '$lib/components/Viz.svelte';
+	import { goto } from '$app/navigation';
 	import { auth } from '$lib/stores/auth.svelte';
 	import { catalog } from '$lib/stores/catalog.svelte';
 	import { player } from '$lib/stores/player.svelte';
@@ -50,6 +51,22 @@
 	const mother = $derived(art?.variantOf ? catalog.findArt(art.variantOf) : undefined);
 	const playable = $derived(art?.media === 'audio' || art?.media === 'video');
 	const isCurrent = $derived(player.current?.id === art?.id);
+
+	let deleting = $state(false);
+	let confirmDelete = $state(false);
+
+	async function deleteArt() {
+		if (!art || deleting) return;
+		deleting = true;
+		try {
+			await api.del(`/artifacts/${art.id}`);
+			await catalog.load(true);
+			goto('/explorar');
+		} catch (e) {
+			deleting = false;
+			confirmDelete = false;
+		}
+	}
 
 	async function addNote() {
 		if (!art || !draft.trim()) return;
@@ -238,11 +255,30 @@
 				{#if auth.isArchimago}
 					<a
 						class="btn cursor-star"
-						style="width: 100%; margin-bottom: 16px; border-color: var(--gold); color: var(--gold-bright); text-decoration: none; box-sizing: border-box"
+						style="width: 100%; margin-bottom: 10px; border-color: var(--gold); color: var(--gold-bright); text-decoration: none; box-sizing: border-box"
 						href="/invocar?edit={art.id}"
 					>
 						<Icon name="edit" s={16} /> Editar sello
 					</a>
+					{#if confirmDelete}
+						<div class="glass" style="border-radius: var(--r-md); padding: 12px 14px; margin-bottom: 10px; border-color: var(--ember)">
+							<p style="font-size: 12.5px; margin: 0 0 10px; color: var(--parchment)">¿Borrar «{art.title}» del grimorio para siempre?</p>
+							<div class="row gap-2">
+								<button class="btn cursor-star" style="flex:1; border-color: var(--ember); color: var(--ember)" onclick={deleteArt} disabled={deleting}>
+									{deleting ? 'Borrando…' : 'Sí, borrar'}
+								</button>
+								<button class="btn cursor-star" style="flex:1" onclick={() => confirmDelete = false}>Cancelar</button>
+							</div>
+						</div>
+					{:else}
+						<button
+							class="btn cursor-star"
+							style="width: 100%; margin-bottom: 16px; box-sizing: border-box; border-color: rgba(181,85,47,.4); color: var(--ember)"
+							onclick={() => confirmDelete = true}
+						>
+							<Icon name="close" s={15} /> Borrar artefacto
+						</button>
+					{/if}
 				{/if}
 				<div class="glass" style="border-radius: var(--r-lg); padding: 20px; margin-bottom: 22px">
 					<div class="eyebrow" style="margin-bottom: 14px">Inscripción</div>

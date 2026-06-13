@@ -200,6 +200,28 @@ async def upload_media(
     raise HTTPException(status.HTTP_400_BAD_REQUEST, "Proporciona file o source_url")
 
 
+@router.delete("/{artifact_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_artifact(
+    artifact_id: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_archimago_user),
+) -> None:
+    art = db.get(Artifact, artifact_id)
+    if art is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Ese artefacto no consta en el grimorio")
+    # Eliminar archivos preservados
+    from app.ingest import media_path_for
+    from pathlib import Path
+    from app.config import settings
+    path = media_path_for(artifact_id)
+    if path:
+        path.unlink(missing_ok=True)
+    thumb = Path(settings.media_dir) / f"{artifact_id}_thumb.jpg"
+    thumb.unlink(missing_ok=True)
+    db.delete(art)
+    db.commit()
+
+
 @router.patch("/{artifact_id}/status", response_model=ArtifactOut)
 def moderate_artifact(
     artifact_id: str,

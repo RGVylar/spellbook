@@ -64,7 +64,12 @@
 					{auth.user ? auth.user.username : 'Profano'}
 				</div>
 				<div style="font-size: 10.5px; color: var(--faint)">
-					{auth.user ? `${ROLE_LABEL[auth.user.role]} · ${ROLE_SUB[auth.user.role]}` : 'solo contempla'}
+					{#if auth.user}
+						<span class:archimago={auth.user.role === 'archimago'}>{ROLE_LABEL[auth.user.role]}</span>
+						· {ROLE_SUB[auth.user.role]}
+					{:else}
+						solo contempla
+					{/if}
 				</div>
 			</div>
 		</a>
