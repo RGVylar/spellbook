@@ -424,6 +424,17 @@
 					>
 						<Icon name="edit" s={16} /> Editar sello
 					</a>
+					{#if art.sourceUrl && art.media !== 'text'}
+						<button
+							class="btn cursor-star"
+							style="width: 100%; margin-bottom: 10px; box-sizing: border-box"
+							onclick={retryIngest}
+							disabled={ingestRetrying || ingesting}
+						>
+							<Icon name="upload" s={15} />
+							{ingesting ? 'Descargando…' : ingestRetrying ? 'Relanzando…' : 'Redescargar archivo'}
+						</button>
+					{/if}
 					{#if confirmDelete}
 						<div class="glass" style="border-radius: var(--r-md); padding: 12px 14px; margin-bottom: 10px; border-color: var(--ember)">
 							<p style="font-size: 12.5px; margin: 0 0 10px; color: var(--parchment)">¿Borrar «{art.title}» del grimorio para siempre?</p>
