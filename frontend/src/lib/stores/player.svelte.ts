@@ -1,4 +1,5 @@
 import { browser } from '$app/environment';
+import { api } from '$lib/api';
 import type { Artifact } from '$lib/types';
 
 const TRACK_KEY = 'spellbook.track';
@@ -34,6 +35,7 @@ class PlayerStore {
 		this.currentTime = 0;
 		this.duration = 0;
 		this.intent = { action: 'play' };
+		if (browser) void api.post(`/artifacts/${art.id}/view`, {}).catch(() => {});
 		if (browser) {
 			try {
 				localStorage.setItem(TRACK_KEY, JSON.stringify(art));
