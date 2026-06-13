@@ -6,16 +6,42 @@
 	import { catalog } from '$lib/stores/catalog.svelte';
 	import { player } from '$lib/stores/player.svelte';
 	import { fmtTime } from '$lib/utils';
+	import type { Artifact } from '$lib/types';
 
 	let audioEl: HTMLAudioElement | undefined = $state();
 	let barEl: HTMLDivElement | undefined = $state();
 	let unavailable = $state(false);
 	let volume = $state(1);
+	let showQueue = $state(false);
+	let cacofoniaOnly = $state(false);
+	let savedQueue = $state<Artifact[]>([]);
 
 	const track = $derived(player.current);
 	const school = $derived(track ? catalog.school(track.school) : undefined);
 	const src = $derived(track ? (track.mediaUrl ?? `/api/media/${track.id}`) : '');
 	const pct = $derived(player.duration > 0 ? (player.currentTime / player.duration) * 100 : 0);
+
+	const currentIdx = $derived(player.queue.findIndex((a) => a.id === track?.id));
+	const upNext = $derived(
+		currentIdx >= 0 ? player.queue.slice(currentIdx + 1) : player.queue
+	);
+
+	function toggleCacofonia() {
+		if (!cacofoniaOnly) {
+			savedQueue = player.queue.slice();
+			const source = player.queue.length > 0 ? player.queue : catalog.playable;
+			player.queue = source.filter((a) => a.school === 'cacofonia');
+			cacofoniaOnly = true;
+		} else {
+			player.queue = savedQueue.length > 0 ? savedQueue : catalog.playable;
+			savedQueue = [];
+			cacofoniaOnly = false;
+		}
+	}
+
+	function playFromQueue(art: Artifact) {
+		player.play(art);
+	}
 
 	// Consume las peticiones play/pause del store sobre el <audio> real
 	$effect(() => {
@@ -53,7 +79,42 @@
 </script>
 
 {#if track}
-	<div class="player">
+	<div class="player" style="position: relative">
+		{#if showQueue}
+			<div class="queue-panel popup">
+				<div class="queue-header">
+					<span class="queue-title">Cola de reproducción</span>
+					<button
+						class="btn ghost cursor-star cacofonia-btn"
+						class:active={cacofoniaOnly}
+						onclick={toggleCacofonia}
+						title={cacofoniaOnly ? 'Mostrar todo' : 'Solo Cacofonía'}
+					>
+						♫ Cacofonía
+					</button>
+				</div>
+				{#if upNext.length === 0}
+					<div class="queue-empty">No hay más canciones en cola</div>
+				{:else}
+					<div class="queue-list">
+						{#each upNext as art}
+							{@const artSchool = catalog.school(art.school)}
+							<button
+								class="queue-item cursor-star"
+								class:queue-current={art.id === track.id}
+								onclick={() => playFromQueue(art)}
+							>
+								<span class="queue-glyph">{artSchool?.glyph ?? '♪'}</span>
+								<span class="queue-info">
+									<span class="queue-name">{art.title}</span>
+									<span class="queue-school">{artSchool?.name ?? art.school}</span>
+								</span>
+							</button>
+						{/each}
+					</div>
+				{/if}
+			</div>
+		{/if}
 		<audio
 			bind:this={audioEl}
 			{src}
@@ -131,6 +192,120 @@
 			</button>
 			<Icon name="volume" s={14} style="color: var(--muted); flex: 0 0 auto" />
 			<input class="pvol" type="range" min="0" max="1" step="0.05" value={volume} oninput={setVolume} aria-label="Volumen" />
+			<button
+				class="btn ghost cursor-star"
+				style="padding: 6px; color: {showQueue ? 'var(--gold-bright)' : 'var(--muted)'}"
+				onclick={() => (showQueue = !showQueue)}
+				aria-label="Cola de reproducción"
+				title="Cola de reproducción"
+			>
+				<Icon name="queue" s={16} />
+			</button>
 		</div>
 	</div>
 {/if}
+
+<style>
+	.queue-panel {
+		position: absolute;
+		bottom: calc(100% + 8px);
+		right: 0;
+		width: 320px;
+		max-height: 400px;
+		border-radius: var(--r-md);
+		display: flex;
+		flex-direction: column;
+		z-index: 50;
+		overflow: hidden;
+	}
+
+	.queue-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 12px 14px 10px;
+		border-bottom: 1px solid rgba(201, 168, 76, 0.15);
+		flex: 0 0 auto;
+	}
+
+	.queue-title {
+		font-size: 11px;
+		font-weight: 600;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--muted);
+	}
+
+	.cacofonia-btn {
+		font-size: 11px;
+		padding: 3px 8px;
+		border-radius: 20px;
+		border: 1px solid rgba(201, 168, 76, 0.3);
+		color: var(--muted);
+		transition: all 0.15s;
+	}
+
+	.cacofonia-btn.active {
+		color: var(--gold-bright);
+		border-color: var(--gold-bright);
+		background: rgba(201, 168, 76, 0.12);
+	}
+
+	.queue-list {
+		overflow-y: auto;
+		flex: 1;
+		padding: 6px;
+	}
+
+	.queue-empty {
+		padding: 24px 16px;
+		text-align: center;
+		font-size: 12px;
+		color: var(--muted);
+	}
+
+	.queue-item {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		width: 100%;
+		padding: 7px 10px;
+		border-radius: var(--r-sm);
+		background: none;
+		border: none;
+		text-align: left;
+		cursor: pointer;
+		transition: background 0.12s;
+	}
+
+	.queue-item:hover {
+		background: rgba(255, 255, 255, 0.06);
+	}
+
+	.queue-glyph {
+		font-size: 16px;
+		flex: 0 0 auto;
+		width: 22px;
+		text-align: center;
+	}
+
+	.queue-info {
+		display: flex;
+		flex-direction: column;
+		gap: 1px;
+		min-width: 0;
+	}
+
+	.queue-name {
+		font-size: 12.5px;
+		color: var(--fg);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.queue-school {
+		font-size: 10.5px;
+		color: var(--muted);
+	}
+</style>

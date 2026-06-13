@@ -38,7 +38,8 @@
 		thumbdown: { body: '<path d="M17 13V4H20a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-3z" /><path d="M14 4H6.5A1.5 1.5 0 0 0 5.03 5.2l-1 5A1.5 1.5 0 0 0 5.5 12H10v5a2 2 0 0 0 2 2h.5a.5.5 0 0 0 .5-.5V17l1-4z" />' },
 		loop: { body: '<path d="M5 12V9a4 4 0 0 1 4-4h8" /><path d="M14 4l3 2.5-3 2.5" /><path d="M19 12v3a4 4 0 0 1-4 4H7" /><path d="M10 20l-3-2.5 3-2.5" />' },
 		shuffle: { body: '<path d="M3 7h3l9 6h3" /><path d="M3 17h3l3-2" /><path d="M15 7h3" /><path d="M15 17h3" /><path d="M18 5l3 2-3 2" /><path d="M18 15l3 2-3 2" />' },
-		volume: { body: '<path d="M11 5L6 9H3v6h3l5 4V5z" /><path d="M15 9a4 4 0 0 1 0 6" />' }
+		volume: { body: '<path d="M11 5L6 9H3v6h3l5 4V5z" /><path d="M15 9a4 4 0 0 1 0 6" />' },
+		queue: { body: '<path d="M4 6h16M4 12h10M4 18h7" /><circle cx="18" cy="16" r="3" /><path d="M18 13v-2" />' }
 	};
 
 	export type IconName = keyof typeof ICONS;
