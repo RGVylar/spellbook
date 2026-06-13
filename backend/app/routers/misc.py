@@ -6,10 +6,11 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.deps import get_archimago_user
 from app.ingest import media_path_for
-from app.models.artifact import STATUS_SELLADO, Artifact, School
+from app.models.artifact import STATUS_PENDIENTE, STATUS_RECHAZADO, STATUS_SELLADO, Artifact, Note, ArtifactReaction, School
 from app.models.user import User
-from app.schemas.artifact import StatsOut
+from app.schemas.artifact import AdminStatsOut, ArtifactMini, SchoolCount, StatsOut
 
 router = APIRouter(tags=["misc"])
 
@@ -41,6 +42,94 @@ def stats(db: Session = Depends(get_db)) -> StatsOut:
         schools=schools,
         since=since,
         mages=mages,
+    )
+
+
+@router.get("/admin/stats", response_model=AdminStatsOut)
+def admin_stats(db: Session = Depends(get_db), _: User = Depends(get_archimago_user)) -> AdminStatsOut:
+    def count_where(**kwargs):
+        stmt = select(func.count()).select_from(Artifact)
+        for col, val in kwargs.items():
+            stmt = stmt.where(getattr(Artifact, col) == val)
+        return db.scalar(stmt) or 0
+
+    total = count_where()
+    sellado = count_where(status=STATUS_SELLADO)
+    pendiente = count_where(status=STATUS_PENDIENTE)
+    rechazado = count_where(status=STATUS_RECHAZADO)
+
+    # Por tipo y media (sobre todos los artefactos)
+    rows_type = db.execute(
+        select(Artifact.type, func.count()).group_by(Artifact.type)
+    ).all()
+    by_type = {r[0]: r[1] for r in rows_type}
+
+    rows_media = db.execute(
+        select(Artifact.media, func.count()).group_by(Artifact.media)
+    ).all()
+    by_media = {r[0]: r[1] for r in rows_media}
+
+    # Por escuela (sellados)
+    schools = db.scalars(select(School)).all()
+    rows_school = db.execute(
+        select(Artifact.school, func.count())
+        .where(Artifact.status == STATUS_SELLADO)
+        .group_by(Artifact.school)
+    ).all()
+    school_counts = {r[0]: r[1] for r in rows_school}
+    by_school = [
+        SchoolCount(id=s.id, name=s.name, glyph=s.glyph, hue=s.hue, count=school_counts.get(s.id, 0))
+        for s in schools
+    ]
+    by_school.sort(key=lambda x: x.count, reverse=True)
+
+    # Usuarios por rol
+    rows_role = db.execute(
+        select(User.role, func.count()).group_by(User.role)
+    ).all()
+    by_role = {r[0]: r[1] for r in rows_role}
+    total_users = sum(by_role.values())
+
+    # Top 5 por vistas y likes (sellados)
+    top_views_rows = db.scalars(
+        select(Artifact)
+        .where(Artifact.status == STATUS_SELLADO)
+        .order_by(Artifact.views.desc())
+        .limit(5)
+    ).all()
+    top_likes_rows = db.scalars(
+        select(Artifact)
+        .where(Artifact.status == STATUS_SELLADO)
+        .order_by(Artifact.likes.desc())
+        .limit(5)
+    ).all()
+
+    def to_mini(a: Artifact) -> ArtifactMini:
+        return ArtifactMini(id=a.id, title=a.title, school=a.school, views=a.views, likes=a.likes)
+
+    # Anotaciones y reacciones totales
+    total_notes = db.scalar(select(func.count()).select_from(Note)) or 0
+    total_reactions = db.scalar(select(func.count()).select_from(ArtifactReaction)) or 0
+
+    # Conexiones (enlaces entre sellados)
+    all_links = db.scalars(select(Artifact.links).where(Artifact.status == STATUS_SELLADO)).all()
+    total_connections = sum(len(lnk or []) for lnk in all_links)
+
+    return AdminStatsOut(
+        total=total,
+        sellado=sellado,
+        pendiente=pendiente,
+        rechazado=rechazado,
+        by_type=by_type,
+        by_media=by_media,
+        by_school=by_school,
+        total_users=total_users,
+        by_role=by_role,
+        top_views=[to_mini(a) for a in top_views_rows],
+        top_likes=[to_mini(a) for a in top_likes_rows],
+        total_notes=total_notes,
+        total_reactions=total_reactions,
+        total_connections=total_connections,
     )
 
 

@@ -79,7 +79,7 @@
 </script>
 
 {#if track}
-	<div class="player" style="position: relative">
+	<div class="player">
 		{#if showQueue}
 			<div class="queue-panel popup">
 				<div class="queue-header">

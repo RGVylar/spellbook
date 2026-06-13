@@ -125,3 +125,36 @@ class StatsOut(CamelModel):
     schools: int
     since: int
     mages: int
+
+
+class ArtifactMini(CamelModel):
+    id: str
+    title: str
+    school: str
+    views: int = 0
+    likes: int = 0
+
+
+class SchoolCount(CamelModel):
+    id: str
+    name: str
+    glyph: str
+    hue: str
+    count: int
+
+
+class AdminStatsOut(CamelModel):
+    total: int
+    sellado: int
+    pendiente: int
+    rechazado: int
+    by_type: dict[str, int]
+    by_media: dict[str, int]
+    by_school: list[SchoolCount]
+    total_users: int
+    by_role: dict[str, int]
+    top_views: list[ArtifactMini]
+    top_likes: list[ArtifactMini]
+    total_notes: int
+    total_reactions: int
+    total_connections: int

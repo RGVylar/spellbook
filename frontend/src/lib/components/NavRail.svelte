@@ -57,6 +57,11 @@
 				<Icon name="upload" s={19} />Sin preservar
 			</a>
 		{/if}
+		{#if auth.isArchimago}
+			<a class="navlink cursor-star archimago-link" class:active={isActive('/archimago')} href="/archimago">
+				<Icon name="crown" s={19} />Archimago
+			</a>
+		{/if}
 	</nav>
 	<div style="margin-top: 16px">
 		<hr class="hairline" style="margin: 0 0 14px" />
@@ -80,6 +85,9 @@
 </aside>
 
 <style>
+	.archimago-link { color: var(--gold-bright) !important; }
+	.archimago-link :global(.ic) { color: var(--gold-bright); }
+
 	.pending-badge {
 		margin-left: auto;
 		min-width: 20px;
