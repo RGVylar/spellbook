@@ -39,7 +39,8 @@ class Artifact(Base):
     # Linaje: este artefacto es una variante/derivado de otro (plantilla madre)
     variant_of: Mapped[str | None] = mapped_column(ForeignKey("artifacts.id"), nullable=True)
     media_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    source_url: Mapped[str | None] = mapped_column(String(512), nullable=True)  # origen yt-dlp
+    source_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    thumbnail_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
     status: Mapped[str] = mapped_column(String(16), nullable=False, default=STATUS_SELLADO)
     created_by_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(

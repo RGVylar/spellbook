@@ -60,8 +60,8 @@ def _download_image(url: str, artifact_id: str) -> str:
         return ext
 
 
-def _run_ytdlp(url: str, artifact_id: str) -> str:
-    """Descarga con yt-dlp (vídeo/audio). Devuelve extensión."""
+def _run_ytdlp(url: str, artifact_id: str) -> tuple[str, str | None]:
+    """Descarga con yt-dlp. Devuelve (extensión, thumbnail_url|None)."""
     try:
         import yt_dlp
     except ImportError:
@@ -83,33 +83,39 @@ def _run_ytdlp(url: str, artifact_id: str) -> str:
         'retries': 3,
         'fragment_retries': 3,
     }
+    thumbnail_url = None
     with _DL_SEMAPHORE:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([url])
+            info = ydl.extract_info(url, download=True)
+            if info:
+                thumbnail_url = info.get('thumbnail')
 
     path = media_path_for(artifact_id)
     if path is None:
         raise RuntimeError("yt-dlp no produjo ningún archivo de salida")
-    return path.suffix
+    return path.suffix, thumbnail_url
 
 
 def ingest_url_background(url: str, artifact_id: str) -> None:
-    """Descarga url y actualiza media_url en el artefacto. Diseñado para correr en hilo."""
+    """Descarga url y actualiza media_url/thumbnail_url en el artefacto. Corre en hilo."""
     from app.database import SessionLocal
     from app.models.artifact import Artifact
 
     print(f"[INGEST] Iniciando preservación de {artifact_id} desde {url}")
     try:
+        thumbnail_url = None
         if _is_direct_image(url):
             ext = _download_image(url, artifact_id)
         else:
-            ext = _run_ytdlp(url, artifact_id)
+            ext, thumbnail_url = _run_ytdlp(url, artifact_id)
 
         db = SessionLocal()
         try:
             art = db.get(Artifact, artifact_id)
             if art:
                 art.media_url = f"/api/media/{artifact_id}"
+                if thumbnail_url:
+                    art.thumbnail_url = thumbnail_url
                 db.commit()
             print(f"[INGEST] Preservado {artifact_id}{ext} ✓")
         finally:

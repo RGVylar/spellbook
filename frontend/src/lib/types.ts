@@ -17,8 +17,9 @@ export interface Artifact {
 	desc: string;
 	links: string[];
 	variantOf?: string | null;
-	mediaUrl?: string | null; // ruta al archivo preservado (yt-dlp)
+	mediaUrl?: string | null;
 	sourceUrl?: string | null;
+	thumbnailUrl?: string | null;
 	status: ArtifactStatus;
 	createdAt?: string;
 }

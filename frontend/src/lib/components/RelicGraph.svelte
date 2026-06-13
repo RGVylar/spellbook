@@ -14,15 +14,19 @@
 
 	let hover = $state<number | null>(null);
 
-	const nodes = $derived(
-		art.links
+	const nodes = $derived((() => {
+		const outgoing = art.links
 			.map((id) => catalog.findArt(id))
-			.filter((a): a is Artifact => Boolean(a))
-			.map((a, i, all) => {
-				const ang = (i / all.length) * Math.PI * 2 - Math.PI / 2;
-				return { a, x: cx + Math.cos(ang) * RAD, y: cy + Math.sin(ang) * RAD };
-			})
-	);
+			.filter((a): a is Artifact => Boolean(a));
+		const incoming = catalog.artifacts.filter(
+			(a) => a.id !== art.id && a.links.includes(art.id) && !art.links.includes(a.id)
+		);
+		const all = [...outgoing, ...incoming];
+		return all.map((a, i) => {
+			const ang = (i / all.length) * Math.PI * 2 - Math.PI / 2;
+			return { a, x: cx + Math.cos(ang) * RAD, y: cy + Math.sin(ang) * RAD, reverse: i >= outgoing.length };
+		});
+	})());
 </script>
 
 <div class="graph-wrap" style="aspect-ratio: {W}/{H}">
@@ -51,8 +55,9 @@
 				y1={cy}
 				x2={n.x}
 				y2={n.y}
-				stroke={hover === i ? 'var(--gold-bright)' : 'rgba(201,168,76,.28)'}
+				stroke={hover === i ? 'var(--gold-bright)' : n.reverse ? 'rgba(160,120,201,.35)' : 'rgba(201,168,76,.28)'}
 				stroke-width={hover === i ? 1.6 : 1}
+				stroke-dasharray={n.reverse ? '4 4' : undefined}
 			/>
 		{/each}
 		{#each nodes as n, i (n.a.id)}

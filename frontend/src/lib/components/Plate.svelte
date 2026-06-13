@@ -2,14 +2,22 @@
 	import type { Artifact } from '$lib/types';
 
 	let { art, big = false }: { art: Artifact; big?: boolean } = $props();
+
+	function ytThumbnail(url: string): string | null {
+		const m = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+		return m ? `https://img.youtube.com/vi/${m[1]}/hqdefault.jpg` : null;
+	}
+
+	const thumbSrc = $derived(
+		art.thumbnailUrl ??
+		(art.sourceUrl ? ytThumbnail(art.sourceUrl) : null) ??
+		(art.media === 'image' ? (art.mediaUrl ?? null) : null)
+	);
 </script>
 
 <div class="plate" class:big>
-	<!-- Fondo: media preservada, texto o vacío -->
-	{#if art.mediaUrl && art.media === 'image'}
-		<img class="plate-bg" src={art.mediaUrl} alt="" aria-hidden="true" />
-	{:else if art.mediaUrl && art.media === 'video'}
-		<video class="plate-bg" src={art.mediaUrl} muted preload="metadata" aria-hidden="true"></video>
+	{#if thumbSrc}
+		<img class="plate-bg" src={thumbSrc} alt="" aria-hidden="true" />
 	{:else if art.media === 'text' && art.desc}
 		<div class="plate-text" aria-hidden="true">{art.desc}</div>
 	{/if}
