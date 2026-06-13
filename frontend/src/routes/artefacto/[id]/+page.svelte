@@ -447,7 +447,7 @@
 							<Icon name="spell" s={15} /> Añadir a hechizo
 						</button>
 						{#if spellPickerOpen}
-							<div class="glass" style="position: absolute; top: calc(100% + 6px); left: 0; right: 0; border-radius: var(--r-md); padding: 6px; z-index: 20">
+							<div class="glass popup" style="position: absolute; top: calc(100% + 6px); left: 0; right: 0; border-radius: var(--r-md); padding: 6px; z-index: 20">
 								{#if catalog.spells.length === 0}
 									<p class="muted" style="font-size: 12px; padding: 8px; margin: 0">No hay hechizos creados.</p>
 								{/if}

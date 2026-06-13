@@ -221,6 +221,14 @@
 .player .ptime { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; flex: 0 0 auto; }
 .pbar { flex: 0 0 200px; height: 4px; border-radius: 9px; background: rgba(201,168,76,.16); overflow: hidden; cursor: pointer; }
 .pbar > i { display: block; height: 100%; background: linear-gradient(90deg, var(--gold-deep), var(--gold-bright)); }
+/* Fondo opaco para dropdowns/popovers flotantes (sobreescribe .glass) */
+.popup {
+  background: rgba(10, 8, 16, 0.97) !important;
+  border: 1px solid rgba(201,168,76,0.45) !important;
+  box-shadow: 0 12px 40px rgba(0,0,0,.7), 0 0 0 1px rgba(201,168,76,0.08) !important;
+  backdrop-filter: blur(20px) !important;
+}
+
 /* ---------- School picker (invocar) ---------- */
 .school-picker { position: relative; }
 .school-list {
