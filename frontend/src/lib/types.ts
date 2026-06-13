@@ -47,6 +47,15 @@ export interface Spell {
 	tracks: string[];
 }
 
+export interface UserProfile {
+	username: string;
+	role: Role;
+	glyph: string;
+	createdAt: string;
+	artifactCount: number;
+	artifacts: Artifact[];
+}
+
 export interface Note {
 	id: number;
 	who: string;

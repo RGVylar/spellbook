@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import { api } from '$lib/api';
 	import Icon from '$lib/components/Icon.svelte';
 	import SealButton from '$lib/components/SealButton.svelte';
@@ -9,11 +10,20 @@
 	import type { Invite, TokenResponse } from '$lib/types';
 	import { arcaneTime } from '$lib/utils';
 
+	const urlInvite = $derived(page.url.searchParams.get('invite') ?? '');
+
 	let mode = $state<'login' | 'register'>('login');
 	let username = $state('');
 	let email = $state('');
 	let password = $state('');
 	let inviteCode = $state('');
+
+	$effect(() => {
+		if (urlInvite) {
+			inviteCode = urlInvite;
+			mode = 'register';
+		}
+	});
 	let error = $state('');
 	let submitting = $state(false);
 

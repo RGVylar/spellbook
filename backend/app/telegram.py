@@ -85,6 +85,28 @@ async def send_proposal_alert(username: str, title: str, artifact_id: str) -> No
     await _send(text)
 
 
+def send_new_user_alert_sync(username: str, invited_by: str | None, user_count: int) -> None:
+    text = (
+        f"👤 *[spellbook]* Nuevo aprendiz\n\n"
+        f"*Usuario:* {username}\n"
+        f"*Invitado por:* {invited_by or '—'}\n"
+        f"*Total usuarios:* {user_count}\n\n"
+        f"🕐 {_now()}"
+    )
+    _send_sync(text)
+
+
+def send_proposal_alert_sync(username: str, title: str, artifact_id: str) -> None:
+    text = (
+        f"📜 *[spellbook]* Propuesta pendiente\n\n"
+        f"*Artefacto:* {title}\n"
+        f"*Aprendiz:* {username}\n"
+        f"*Id:* `{artifact_id}`\n\n"
+        f"🕐 {_now()}"
+    )
+    _send_sync(text)
+
+
 def send_ingest_success_sync(artifact_id: str, url: str, ext: str, size_mb: float) -> None:
     """Preservación completada con éxito (sync, para hilos)."""
     text = (

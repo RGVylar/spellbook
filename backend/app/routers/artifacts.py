@@ -1,4 +1,3 @@
-import asyncio
 import re
 import threading
 import unicodedata
@@ -20,7 +19,7 @@ from app.models.artifact import (
 )
 from app.models.user import User
 from app.schemas.artifact import ArtifactCreate, ArtifactOut, ArtifactUpdate, StatusUpdate
-from app.telegram import send_proposal_alert
+from app.telegram import send_proposal_alert_sync
 
 router = APIRouter(prefix="/artifacts", tags=["artifacts"])
 
@@ -155,7 +154,11 @@ def create_artifact(
     db.commit()
     db.refresh(art)
     if art.status == STATUS_PENDIENTE:
-        asyncio.create_task(send_proposal_alert(user.username, art.title, art.id))
+        threading.Thread(
+            target=send_proposal_alert_sync,
+            args=(user.username, art.title, art.id),
+            daemon=True,
+        ).start()
     return art
 
 

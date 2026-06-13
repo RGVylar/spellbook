@@ -44,3 +44,12 @@ class InviteOut(CamelModel):
     created_at: datetime
     used_by: str | None = None
     used_at: datetime | None = None
+
+
+class UserProfileOut(CamelModel):
+    username: str
+    role: str
+    glyph: str
+    created_at: datetime
+    artifact_count: int
+    artifacts: list

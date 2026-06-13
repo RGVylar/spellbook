@@ -57,7 +57,7 @@
 	</nav>
 	<div style="margin-top: 16px">
 		<hr class="hairline" style="margin: 0 0 14px" />
-		<a class="navlink cursor-star" href="/auth" title={auth.user ? 'Tu cuenta' : 'Identifícate'}>
+		<a class="navlink cursor-star" href={auth.user ? `/mago/${auth.user.username}` : '/auth'} title={auth.user ? 'Tu perfil' : 'Identifícate'}>
 			<Icon name="wizard" s={19} style={auth.user ? 'color: var(--gold-bright)' : ''} />
 			<div style="line-height: 1.2">
 				<div style="font-size: 13.5px; color: {auth.user ? 'var(--gold-bright)' : 'var(--parchment-2)'}">

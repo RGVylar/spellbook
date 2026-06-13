@@ -3,7 +3,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.routers import artifacts, auth, invites, misc, notes, schools, spells
+from app.routers import artifacts, auth, invites, misc, notes, schools, spells, users
 from app.telegram import send_error_alert
 
 # Transient network errors — log but don't spam Telegram
@@ -45,3 +45,4 @@ app.include_router(schools.router, prefix=api_prefix)
 app.include_router(spells.router, prefix=api_prefix)
 app.include_router(notes.router, prefix=api_prefix)
 app.include_router(misc.router, prefix=api_prefix)
+app.include_router(users.router, prefix=api_prefix)

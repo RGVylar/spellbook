@@ -1,4 +1,4 @@
-import asyncio
+import threading
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -10,7 +10,7 @@ from app.deps import get_current_user
 from app.models.user import ROLE_APRENDIZ, Invite, User
 from app.schemas.auth import TokenResponse, UserLogin, UserOut, UserRegister
 from app.security import create_access_token, hash_password, verify_password
-from app.telegram import send_new_user_alert
+from app.telegram import send_new_user_alert_sync
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -43,9 +43,11 @@ def register(payload: UserRegister, db: Session = Depends(get_db)) -> TokenRespo
     db.refresh(user)
 
     user_count = db.scalar(select(func.count()).select_from(User)) or 0
-    asyncio.create_task(
-        send_new_user_alert(user.username, invite.created_by.username, user_count)
-    )
+    threading.Thread(
+        target=send_new_user_alert_sync,
+        args=(user.username, invite.created_by.username, user_count),
+        daemon=True,
+    ).start()
     return TokenResponse(
         access_token=create_access_token(user.id),
         user=UserOut.model_validate(user),
