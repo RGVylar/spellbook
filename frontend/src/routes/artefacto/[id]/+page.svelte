@@ -155,6 +155,13 @@
 		}
 	});
 
+	// ── Autoplay ─────────────────────────────────────────────
+	$effect(() => {
+		if (art?.status === 'sellado' && art.media === 'audio') {
+			player.play(art, catalog.playable);
+		}
+	});
+
 	// ── Reacciones ───────────────────────────────────────────
 	let reacting = $state(false);
 
