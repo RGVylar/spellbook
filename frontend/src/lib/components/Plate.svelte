@@ -41,16 +41,16 @@
 	.plate-text {
 		position: absolute;
 		inset: 0;
-		padding: 14px 16px;
+		padding: 12px 14px;
 		font-family: var(--font-ui);
-		font-size: 10.5px;
-		line-height: 1.55;
+		font-size: 18px;
+		line-height: 1.5;
 		color: var(--gold-deep);
-		opacity: 0.45;
+		opacity: 0.5;
 		overflow: hidden;
 		pointer-events: none;
 		word-break: break-word;
-		mask-image: linear-gradient(to bottom, rgba(0,0,0,0.9) 40%, transparent 100%);
-		-webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.9) 40%, transparent 100%);
+		mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 30%, transparent 80%);
+		-webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 30%, transparent 80%);
 	}
 </style>
