@@ -35,7 +35,10 @@
 		upload: { body: '<path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" /><path d="M12 15V3M8 7l4-4 4 4" />' },
 		eye: { body: '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" /><circle cx="12" cy="12" r="3" />' },
 		thumbup: { body: '<path d="M7 11V20H4a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h3z" /><path d="M10 20h7.5a1.5 1.5 0 0 0 1.47-1.2l1-5A1.5 1.5 0 0 0 18.5 12H14V7a2 2 0 0 0-2-2h-.5a.5.5 0 0 0-.5.5V7l-1 4z" />' },
-		thumbdown: { body: '<path d="M17 13V4H20a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-3z" /><path d="M14 4H6.5A1.5 1.5 0 0 0 5.03 5.2l-1 5A1.5 1.5 0 0 0 5.5 12H10v5a2 2 0 0 0 2 2h.5a.5.5 0 0 0 .5-.5V17l1-4z" />' }
+		thumbdown: { body: '<path d="M17 13V4H20a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-3z" /><path d="M14 4H6.5A1.5 1.5 0 0 0 5.03 5.2l-1 5A1.5 1.5 0 0 0 5.5 12H10v5a2 2 0 0 0 2 2h.5a.5.5 0 0 0 .5-.5V17l1-4z" />' },
+		loop: { body: '<path d="M5 12V9a4 4 0 0 1 4-4h8" /><path d="M14 4l3 2.5-3 2.5" /><path d="M19 12v3a4 4 0 0 1-4 4H7" /><path d="M10 20l-3-2.5 3-2.5" />' },
+		shuffle: { body: '<path d="M3 7h3l9 6h3" /><path d="M3 17h3l3-2" /><path d="M15 7h3" /><path d="M15 17h3" /><path d="M18 5l3 2-3 2" /><path d="M18 15l3 2-3 2" />' },
+		volume: { body: '<path d="M11 5L6 9H3v6h3l5 4V5z" /><path d="M15 9a4 4 0 0 1 0 6" />' }
 	};
 
 	export type IconName = keyof typeof ICONS;

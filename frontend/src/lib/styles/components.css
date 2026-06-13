@@ -221,6 +221,25 @@
 .player .ptime { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; flex: 0 0 auto; }
 .pbar { flex: 0 0 200px; height: 4px; border-radius: 9px; background: rgba(201,168,76,.16); overflow: hidden; cursor: pointer; }
 .pbar > i { display: block; height: 100%; background: linear-gradient(90deg, var(--gold-deep), var(--gold-bright)); }
+/* ---------- School picker (invocar) ---------- */
+.school-picker { position: relative; }
+.school-list {
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 20;
+  border-radius: var(--r-md); padding: 6px; max-height: 320px; overflow-y: auto;
+}
+.school-opt {
+  display: flex; align-items: flex-start; gap: 12px; padding: 9px 12px;
+  border-radius: var(--r-sm); border: 1px solid transparent; transition: background .12s, border-color .12s;
+}
+.school-opt:hover { background: rgba(201,168,76,.08); }
+.school-opt.on { background: rgba(201,168,76,.12); border-color: rgba(201,168,76,.28); }
+.school-glyph { font-size: 20px; line-height: 1; flex: 0 0 auto; margin-top: 1px; }
+.school-opt-name { font-size: 13.5px; font-weight: 600; color: var(--parchment); }
+.school-opt-desc { font-size: 11.5px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+
+.pcontrols { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; }
+.pvol { width: 72px; height: 3px; accent-color: var(--gold); cursor: pointer; opacity: .7; transition: opacity .15s; }
+.pvol:hover { opacity: 1; }
 
 /* ---------- RelicGraph ---------- */
 .graph-wrap { position: relative; border-radius: var(--r-lg); overflow: hidden; background: radial-gradient(120% 120% at 50% 30%, rgba(107,63,160,0.12), transparent 60%), #08070c; border: 1px solid var(--glass-border); }
@@ -353,5 +372,6 @@
   .spells-grid { grid-template-columns: 1fr !important; }
   .invoke-cols { grid-template-columns: 1fr !important; }
   .player .row.gap-2 { display: none; }
+  .player .pcontrols { display: none; }
 }
 @media (min-width: 861px) { .mobile-only { display: none !important; } }

@@ -21,6 +21,8 @@ class PlayerStore {
 	queue = $state<Artifact[]>([]);
 	currentTime = $state(0);
 	duration = $state(0);
+	loop = $state(false);
+	shuffle = $state(false);
 
 	/** Petición pendiente que ArcanePlayer consume con $effect */
 	intent = $state<{ action: 'play' | 'pause' } | null>(null);
@@ -52,6 +54,12 @@ class PlayerStore {
 
 	step(dir: 1 | -1) {
 		if (this.queue.length === 0 || !this.current) return;
+		if (this.shuffle && dir === 1) {
+			const others = this.queue.filter((a) => a.id !== this.current?.id);
+			if (others.length === 0) return;
+			this.play(others[Math.floor(Math.random() * others.length)]);
+			return;
+		}
 		let i = this.queue.findIndex((a) => a.id === this.current?.id);
 		if (i === -1) i = 0;
 		const next = this.queue[(i + dir + this.queue.length) % this.queue.length];

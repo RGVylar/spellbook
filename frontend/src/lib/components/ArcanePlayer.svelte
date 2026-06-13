@@ -10,6 +10,7 @@
 	let audioEl: HTMLAudioElement | undefined = $state();
 	let barEl: HTMLDivElement | undefined = $state();
 	let unavailable = $state(false);
+	let volume = $state(1);
 
 	const track = $derived(player.current);
 	const school = $derived(track ? catalog.school(track.school) : undefined);
@@ -44,6 +45,11 @@
 		const r = barEl.getBoundingClientRect();
 		audioEl.currentTime = ((e.clientX - r.left) / r.width) * player.duration;
 	}
+
+	function setVolume(e: Event) {
+		volume = Number((e.target as HTMLInputElement).value);
+		if (audioEl) audioEl.volume = volume;
+	}
 </script>
 
 {#if track}
@@ -52,6 +58,7 @@
 			bind:this={audioEl}
 			{src}
 			preload="metadata"
+			loop={player.loop}
 			onplay={() => (player.playing = true)}
 			onpause={() => (player.playing = false)}
 			onended={() => step(1)}
@@ -102,6 +109,28 @@
 		</div>
 		<div class="pbar" bind:this={barEl} onclick={seek} role="presentation">
 			<i style="width: {pct}%"></i>
+		</div>
+		<div class="pcontrols">
+			<button
+				class="btn ghost cursor-star"
+				style="padding: 6px; color: {player.loop ? 'var(--gold-bright)' : 'var(--muted)'}"
+				onclick={() => (player.loop = !player.loop)}
+				aria-label="Bucle"
+				title={player.loop ? 'Bucle activo' : 'Bucle'}
+			>
+				<Icon name="loop" s={16} />
+			</button>
+			<button
+				class="btn ghost cursor-star"
+				style="padding: 6px; color: {player.shuffle ? 'var(--gold-bright)' : 'var(--muted)'}"
+				onclick={() => (player.shuffle = !player.shuffle)}
+				aria-label="Mix aleatorio"
+				title={player.shuffle ? 'Mix activo' : 'Mix'}
+			>
+				<Icon name="shuffle" s={16} />
+			</button>
+			<Icon name="volume" s={14} style="color: var(--muted); flex: 0 0 auto" />
+			<input class="pvol" type="range" min="0" max="1" step="0.05" value={volume} oninput={setVolume} aria-label="Volumen" />
 		</div>
 	</div>
 {/if}

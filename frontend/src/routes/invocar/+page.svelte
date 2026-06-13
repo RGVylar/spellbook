@@ -32,6 +32,12 @@
 	let era = $state<number | ''>('');
 	let sourceUrl = $state('');
 	let runes = $state<string[]>([]);
+	let newRune = $state('');
+	let schoolOpen = $state(false);
+
+	function onDocClick(e: MouseEvent) {
+		if (schoolOpen && !(e.target as HTMLElement).closest('.school-picker')) schoolOpen = false;
+	}
 	let links = $state<string[]>([]);
 	let variantOf = $state<string | null>(null);
 	let linkQ = $state('');
@@ -63,6 +69,13 @@
 
 	function toggleRune(r: string) {
 		runes = runes.includes(r) ? runes.filter((x) => x !== r) : [...runes, r];
+	}
+
+	function addRune() {
+		const r = newRune.trim().toLowerCase();
+		if (!r || runes.includes(r)) { newRune = ''; return; }
+		runes = [...runes, r];
+		newRune = '';
 	}
 
 	const linkMatches = $derived(
@@ -154,6 +167,7 @@
 		era = '';
 		sourceUrl = '';
 		runes = [];
+		newRune = '';
 		links = [];
 		variantOf = null;
 		mediaFile = null;
@@ -161,6 +175,7 @@
 </script>
 
 <svelte:head><title>Invocar · SPELLBOOK</title></svelte:head>
+<svelte:document onclick={onDocClick} />
 
 {#if done}
 	<div class="canvas" style="max-width: 620px; text-align: center; padding-top: 80px">
@@ -353,18 +368,62 @@
 			{/if}
 
 			<div class="field">
-				<label for="f-school">Escuela de magia</label>
-				<select id="f-school" class="select" bind:value={school}>
-					<option value="">— elige una disciplina —</option>
-					{#each catalog.schools as s (s.id)}
-						<option value={s.id}>{s.glyph} {s.name}</option>
-					{/each}
-				</select>
+				<label>Escuela de magia</label>
+				<div class="school-picker">
+					<button
+						type="button"
+						class="select cursor-star"
+						style="display: flex; align-items: center; gap: 10px; text-align: left"
+						onclick={() => (schoolOpen = !schoolOpen)}
+					>
+						{#if school}
+							{@const s = catalog.school(school)}
+							<span style="font-size: 18px; line-height: 1">{s?.glyph}</span>
+							<span style="flex: 1">{s?.name}</span>
+						{:else}
+							<span style="flex: 1; color: var(--muted)">— elige una disciplina —</span>
+						{/if}
+						<Icon name="chevron" s={14} style="color: var(--muted); transform: rotate({schoolOpen ? '-90deg' : '90deg'}); transition: transform .15s; flex: 0 0 auto" />
+					</button>
+					{#if schoolOpen}
+						<div class="school-list glass">
+							{#each catalog.schools as s (s.id)}
+								<div
+									class="school-opt cursor-star"
+									class:on={school === s.id}
+									role="option"
+									aria-selected={school === s.id}
+									tabindex="0"
+									onclick={() => { school = s.id; schoolOpen = false; }}
+									onkeydown={(e) => { if (e.key === 'Enter') { school = s.id; schoolOpen = false; } }}
+								>
+									<span class="school-glyph">{s.glyph}</span>
+									<div style="min-width: 0">
+										<div class="school-opt-name">{s.name}</div>
+										<div class="school-opt-desc">{s.desc.split('.')[0]}.</div>
+									</div>
+								</div>
+							{/each}
+						</div>
+					{/if}
+				</div>
 			</div>
 
 			<div class="field">
 				<label for="f-runes">Marca sus runas</label>
-				<div id="f-runes"><RuneCloud runes={catalog.runes} active={runes} onToggle={toggleRune} /></div>
+				<div id="f-runes">
+					<RuneCloud runes={[...new Set([...catalog.runes, ...runes])]} active={runes} onToggle={toggleRune} />
+				</div>
+				<div style="display: flex; gap: 8px; margin-top: 8px">
+					<input
+						class="input"
+						placeholder="Nueva runa…"
+						bind:value={newRune}
+						style="flex: 1; margin: 0; font-size: 13px"
+						onkeydown={(e) => { if (e.key === 'Enter') { addRune(); e.preventDefault(); } }}
+					/>
+					<button type="button" class="btn cursor-star" onclick={addRune} style="flex: 0 0 auto; padding: 0 14px">+</button>
+				</div>
 				<div class="hint">{runes.length} runa{runes.length !== 1 ? 's' : ''} marcada{runes.length !== 1 ? 's' : ''}</div>
 			</div>
 
