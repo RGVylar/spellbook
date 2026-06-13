@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, Text, func
+from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -46,8 +46,14 @@ class Artifact(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
+    views: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    likes: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    dislikes: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
 
     notes: Mapped[list["Note"]] = relationship(
+        back_populates="artifact", cascade="all, delete-orphan"
+    )
+    reactions: Mapped[list["ArtifactReaction"]] = relationship(
         back_populates="artifact", cascade="all, delete-orphan"
     )
 
@@ -61,6 +67,18 @@ class Spell(Base):
     hue: Mapped[str] = mapped_column(String(16), nullable=False)
     desc: Mapped[str] = mapped_column("description", Text, nullable=False)
     tracks: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+
+
+class ArtifactReaction(Base):
+    __tablename__ = "artifact_reactions"
+    __table_args__ = (UniqueConstraint("artifact_id", "user_id"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    artifact_id: Mapped[str] = mapped_column(ForeignKey("artifacts.id", ondelete="CASCADE"), nullable=False)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    reaction: Mapped[str] = mapped_column(String(8), nullable=False)  # 'like' | 'dislike'
+
+    artifact: Mapped[Artifact] = relationship(back_populates="reactions")
 
 
 class Note(Base):

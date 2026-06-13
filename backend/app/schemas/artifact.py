@@ -24,6 +24,10 @@ class ArtifactOut(CamelModel):
     thumbnail_url: str | None = None
     status: str
     created_at: datetime | None = None
+    views: int = 0
+    likes: int = 0
+    dislikes: int = 0
+    user_reaction: str | None = None
 
 
 class ArtifactCreate(CamelModel):

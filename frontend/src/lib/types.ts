@@ -22,6 +22,10 @@ export interface Artifact {
 	thumbnailUrl?: string | null;
 	status: ArtifactStatus;
 	createdAt?: string;
+	views?: number;
+	likes?: number;
+	dislikes?: number;
+	userReaction?: string | null;
 }
 
 export interface School {

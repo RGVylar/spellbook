@@ -14,6 +14,7 @@ from app.models.artifact import (
     STATUS_PENDIENTE,
     STATUS_SELLADO,
     Artifact,
+    ArtifactReaction,
     School,
 )
 from app.models.user import User
@@ -88,7 +89,7 @@ def get_artifact(
     artifact_id: str,
     db: Session = Depends(get_db),
     user: User | None = Depends(get_optional_user),
-) -> Artifact:
+) -> dict:
     art = db.get(Artifact, artifact_id)
     if art is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Ese artefacto no consta en el grimorio")
@@ -96,7 +97,16 @@ def get_artifact(
         is_owner = user is not None and art.created_by_id == user.id
         if not (is_owner or (user is not None and user.is_moderator)):
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Ese artefacto no consta en el grimorio")
-    return art
+    user_reaction = None
+    if user:
+        row = db.scalar(
+            select(ArtifactReaction).where(
+                ArtifactReaction.artifact_id == artifact_id,
+                ArtifactReaction.user_id == user.id,
+            )
+        )
+        user_reaction = row.reaction if row else None
+    return {**art.__dict__, "user_reaction": user_reaction}
 
 
 @router.post("", response_model=ArtifactOut, status_code=status.HTTP_201_CREATED)
@@ -160,6 +170,67 @@ def update_artifact(
     db.commit()
     db.refresh(art)
     return art
+
+
+@router.post("/{artifact_id}/view", status_code=status.HTTP_204_NO_CONTENT)
+def record_view(artifact_id: str, db: Session = Depends(get_db)) -> None:
+    """Incrementa el contador de visitas. Anónimo, fire-and-forget."""
+    art = db.get(Artifact, artifact_id)
+    if art and art.status == STATUS_SELLADO:
+        art.views = (art.views or 0) + 1
+        db.commit()
+
+
+@router.post("/{artifact_id}/react")
+def react(
+    artifact_id: str,
+    payload: dict,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> dict:
+    """Like / dislike / quitar reacción. payload: {"reaction": "like"|"dislike"|null}"""
+    art = db.get(Artifact, artifact_id)
+    if art is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Ese artefacto no consta en el grimorio")
+    new_reaction: str | None = payload.get("reaction")
+    if new_reaction not in ("like", "dislike", None):
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Reacción inválida")
+
+    existing = db.scalar(
+        select(ArtifactReaction).where(
+            ArtifactReaction.artifact_id == artifact_id,
+            ArtifactReaction.user_id == user.id,
+        )
+    )
+    old_reaction = existing.reaction if existing else None
+
+    # Actualizar contadores
+    if old_reaction == "like":
+        art.likes = max(0, (art.likes or 0) - 1)
+    elif old_reaction == "dislike":
+        art.dislikes = max(0, (art.dislikes or 0) - 1)
+
+    if new_reaction == old_reaction:
+        # Toggle off — quitar reacción
+        if existing:
+            db.delete(existing)
+        new_reaction = None
+    elif new_reaction is None:
+        if existing:
+            db.delete(existing)
+    else:
+        if existing:
+            existing.reaction = new_reaction
+        else:
+            db.add(ArtifactReaction(artifact_id=artifact_id, user_id=user.id, reaction=new_reaction))
+        if new_reaction == "like":
+            art.likes = (art.likes or 0) + 1
+        else:
+            art.dislikes = (art.dislikes or 0) + 1
+
+    db.commit()
+    db.refresh(art)
+    return {"likes": art.likes, "dislikes": art.dislikes, "userReaction": new_reaction}
 
 
 @router.get("/{artifact_id}/ingest-status")

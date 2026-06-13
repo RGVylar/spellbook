@@ -32,7 +32,10 @@
 		user: { body: '<circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6" />' },
 		logout: { body: '<path d="M14 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2" /><path d="M9 12h12l-3-3M18 15l3-3" />' },
 		variant: { body: '<circle cx="12" cy="5" r="2.5" /><circle cx="6" cy="18" r="2.5" /><circle cx="18" cy="18" r="2.5" /><path d="M12 7.5v3M12 10.5l-5 5M12 10.5l5 5" />' },
-		upload: { body: '<path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" /><path d="M12 15V3M8 7l4-4 4 4" />' }
+		upload: { body: '<path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" /><path d="M12 15V3M8 7l4-4 4 4" />' },
+		eye: { body: '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" /><circle cx="12" cy="12" r="3" />' },
+		thumbup: { body: '<path d="M7 11V20H4a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h3z" /><path d="M10 20h7.5a1.5 1.5 0 0 0 1.47-1.2l1-5A1.5 1.5 0 0 0 18.5 12H14V7a2 2 0 0 0-2-2h-.5a.5.5 0 0 0-.5.5V7l-1 4z" />' },
+		thumbdown: { body: '<path d="M17 13V4H20a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-3z" /><path d="M14 4H6.5A1.5 1.5 0 0 0 5.03 5.2l-1 5A1.5 1.5 0 0 0 5.5 12H10v5a2 2 0 0 0 2 2h.5a.5.5 0 0 0 .5-.5V17l1-4z" />' }
 	};
 
 	export type IconName = keyof typeof ICONS;

@@ -127,6 +127,34 @@
 		}
 	}
 
+	// ── Visitas ──────────────────────────────────────────────
+	$effect(() => {
+		if (art?.status === 'sellado') {
+			void api.post(`/artifacts/${art.id}/view`).catch(() => {});
+		}
+	});
+
+	// ── Reacciones ───────────────────────────────────────────
+	let reacting = $state(false);
+
+	async function react(reaction: 'like' | 'dislike') {
+		if (!art || reacting || !auth.user) return;
+		reacting = true;
+		// toggle: si ya tenías esa reacción, la quitas
+		const next = art.userReaction === reaction ? null : reaction;
+		try {
+			const res = await api.post<{ likes: number; dislikes: number; userReaction: string | null }>(
+				`/artifacts/${art.id}/react`,
+				{ reaction: next }
+			);
+			art.likes = res.likes;
+			art.dislikes = res.dislikes;
+			art.userReaction = res.userReaction;
+		} catch { /* silencioso */ } finally {
+			reacting = false;
+		}
+	}
+
 	async function addNote() {
 		if (!art || !draft.trim()) return;
 		noteError = '';
@@ -196,7 +224,32 @@
 				<h1 class="t-display" style="font-size: clamp(34px, 5vw, 52px); font-weight: 700; margin: 0 0 6px; line-height: 1.05">
 					{art.title}
 				</h1>
-				<p class="muted" style="margin: 0 0 22px; font-style: italic">{art.origin}</p>
+				<p class="muted" style="margin: 0 0 14px; font-style: italic">{art.origin}</p>
+
+				<!-- Visitas + reacciones -->
+				<div class="row gap-3" style="margin-bottom: 22px; flex-wrap: wrap">
+					<span class="row gap-1 muted" style="font-size: 12.5px; gap: 5px">
+						<Icon name="eye" s={14} /> {(art.views ?? 0).toLocaleString()} visitas
+					</span>
+					<button
+						class="row gap-1 btn ghost cursor-star"
+						style="font-size: 12.5px; padding: 4px 10px; gap: 5px; {art.userReaction === 'like' ? 'color: var(--gold-bright); border-color: var(--gold)' : ''}"
+						onclick={() => react('like')}
+						disabled={reacting || !auth.user}
+						title={auth.user ? 'Me gusta' : 'Identifícate para reaccionar'}
+					>
+						<Icon name="thumbup" s={14} /> {art.likes ?? 0}
+					</button>
+					<button
+						class="row gap-1 btn ghost cursor-star"
+						style="font-size: 12.5px; padding: 4px 10px; gap: 5px; {art.userReaction === 'dislike' ? 'color: var(--ember); border-color: var(--ember)' : ''}"
+						onclick={() => react('dislike')}
+						disabled={reacting || !auth.user}
+						title={auth.user ? 'No me gusta' : 'Identifícate para reaccionar'}
+					>
+						<Icon name="thumbdown" s={14} /> {art.dislikes ?? 0}
+					</button>
+				</div>
 
 				<div class="card flat" style="margin-bottom: 24px">
 					<Corner cls="tl" /><Corner cls="tr" /><Corner cls="bl" /><Corner cls="br" />
