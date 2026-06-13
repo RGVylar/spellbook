@@ -5,7 +5,7 @@
 
 	function ytThumbnail(url: string): string | null {
 		const m = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
-		return m ? `https://img.youtube.com/vi/${m[1]}/hqdefault.jpg` : null;
+		return m ? `https://img.youtube.com/vi/${m[1]}/mqdefault.jpg` : null;
 	}
 
 	const thumbSrc = $derived(
