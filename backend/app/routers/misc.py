@@ -52,6 +52,16 @@ _MIME = {
 }
 
 
+@router.get("/media/{artifact_id}/thumb")
+def media_thumb(artifact_id: str) -> FileResponse:
+    from pathlib import Path
+    from app.config import settings
+    thumb = Path(settings.media_dir) / f"{artifact_id}_thumb.jpg"
+    if not thumb.exists():
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Thumbnail no disponible")
+    return FileResponse(thumb, media_type="image/jpeg")
+
+
 @router.get("/media/{artifact_id}")
 def media(artifact_id: str) -> FileResponse:
     path = media_path_for(artifact_id)

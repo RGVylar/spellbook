@@ -35,13 +35,39 @@ def media_path_for(artifact_id: str) -> Path | None:
     return None
 
 
-def save_upload(data: bytes, original_filename: str, artifact_id: str) -> str:
-    """Guarda bytes subidos directamente. Devuelve la extensión (.jpg, .mp4…)."""
+_VIDEO_EXTS = {'.mp4', '.webm', '.mkv', '.mov', '.avi', '.m4v'}
+
+
+def _extract_video_thumbnail(video_path: Path, artifact_id: str) -> str | None:
+    """Extrae el frame del segundo 1 con ffmpeg. Devuelve URL del thumb o None."""
+    import subprocess
+    thumb = MEDIA_DIR / f"{artifact_id}_thumb.jpg"
+    try:
+        result = subprocess.run(
+            [
+                'ffmpeg', '-y', '-ss', '1', '-i', str(video_path),
+                '-vframes', '1', '-q:v', '3',
+                '-vf', 'scale=640:-1',
+                str(thumb),
+            ],
+            capture_output=True,
+            timeout=30,
+        )
+        if result.returncode == 0 and thumb.exists():
+            return f"/api/media/{artifact_id}/thumb"
+    except Exception as exc:
+        print(f"[INGEST] ffmpeg thumbnail failed for {artifact_id}: {exc}")
+    return None
+
+
+def save_upload(data: bytes, original_filename: str, artifact_id: str) -> tuple[str, str | None]:
+    """Guarda bytes subidos. Devuelve (extensión, thumbnail_url|None)."""
     ext = Path(original_filename).suffix.lower() or '.bin'
     MEDIA_DIR.mkdir(parents=True, exist_ok=True)
     dest = MEDIA_DIR / f"{artifact_id}{ext}"
     dest.write_bytes(data)
-    return ext
+    thumb_url = _extract_video_thumbnail(dest, artifact_id) if ext in _VIDEO_EXTS else None
+    return ext, thumb_url
 
 
 def _is_direct_image(url: str) -> bool:

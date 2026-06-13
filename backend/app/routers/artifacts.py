@@ -181,10 +181,12 @@ async def upload_media(
         data = await file.read()
         if len(data) > 200 * 1024 * 1024:  # 200 MB
             raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "El archivo supera los 200 MB")
-        ext = save_upload(data, file.filename or f"media{artifact_id}", artifact_id)
+        ext, thumb_url = save_upload(data, file.filename or f"media{artifact_id}", artifact_id)
         art.media_url = f"/api/media/{artifact_id}"
+        if thumb_url:
+            art.thumbnail_url = thumb_url
         db.commit()
-        return {"mediaUrl": art.media_url, "status": "ready", "ext": ext}
+        return {"mediaUrl": art.media_url, "thumbnailUrl": art.thumbnail_url, "status": "ready", "ext": ext}
 
     if source_url:
         # Lanza la descarga en segundo plano para no bloquear la respuesta
