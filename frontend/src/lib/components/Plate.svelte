@@ -17,7 +17,7 @@
 
 <div class="plate" class:big class:compact>
 	{#if thumbSrc}
-		<img class="plate-bg" src={thumbSrc} alt="" aria-hidden="true" />
+		<img class="plate-bg" src={thumbSrc} alt="" aria-hidden="true" loading="lazy" decoding="async" />
 	{:else if art.media === 'text' && art.desc}
 		<div class="plate-text" aria-hidden="true">{art.desc}</div>
 	{/if}

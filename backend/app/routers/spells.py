@@ -35,10 +35,20 @@ def get_spell(spell_id: str, db: Session = Depends(get_db)) -> SpellDetail:
     if spell is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Hechizo desconocido")
     tracks = []
-    for tid in spell.tracks:
-        art = db.get(Artifact, tid)
-        if art is not None and art.status == STATUS_SELLADO:
-            tracks.append(ArtifactOut.model_validate(art))
+    if spell.tracks:
+        track_map = {
+            a.id: a
+            for a in db.scalars(
+                select(Artifact).where(
+                    Artifact.id.in_(spell.tracks), Artifact.status == STATUS_SELLADO
+                )
+            ).all()
+        }
+        tracks = [
+            ArtifactOut.model_validate(track_map[tid])
+            for tid in spell.tracks
+            if tid in track_map
+        ]
     return SpellDetail(spell=SpellOut.model_validate(spell), tracks=tracks)
 
 

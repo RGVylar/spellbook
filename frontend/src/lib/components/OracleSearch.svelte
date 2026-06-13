@@ -23,11 +23,14 @@
 		}
 	});
 
+	const pool = $derived<Result[]>([
+		...catalog.artifacts.map((a): Result => ({ kind: 'art', a })),
+		...catalog.schools.map((sc): Result => ({ kind: 'school', sc })),
+		...catalog.spells.map((sp): Result => ({ kind: 'spell', sp })),
+	]);
+
 	const results = $derived.by<Result[]>(() => {
 		const s = q.trim().toLowerCase();
-		const pool: Result[] = catalog.artifacts.map((a) => ({ kind: 'art', a }));
-		for (const sc of catalog.schools) pool.push({ kind: 'school', sc });
-		for (const sp of catalog.spells) pool.push({ kind: 'spell', sp });
 		if (!s) return pool.filter((p) => p.kind === 'art').slice(0, 6);
 		return pool
 			.filter((p) => {

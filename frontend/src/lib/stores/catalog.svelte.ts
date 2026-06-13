@@ -27,12 +27,15 @@ class CatalogStore {
 		this.loaded = true;
 	}
 
+	schoolMap = $derived(new Map(this.schools.map((s) => [s.id, s])));
+	artifactMap = $derived(new Map(this.artifacts.map((a) => [a.id, a])));
+
 	school(id: string): School | undefined {
-		return this.schools.find((s) => s.id === id);
+		return this.schoolMap.get(id);
 	}
 
 	findArt(id: string): Artifact | undefined {
-		return this.artifacts.find((a) => a.id === id);
+		return this.artifactMap.get(id);
 	}
 
 	get playable(): Artifact[] {

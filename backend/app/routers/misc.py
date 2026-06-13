@@ -23,13 +23,21 @@ BASE_RUNES = [
 
 @router.get("/stats", response_model=StatsOut)
 def stats(db: Session = Depends(get_db)) -> StatsOut:
-    arts = db.scalars(select(Artifact).where(Artifact.status == STATUS_SELLADO)).all()
+    artifact_count = db.scalar(
+        select(func.count()).select_from(Artifact).where(Artifact.status == STATUS_SELLADO)
+    ) or 0
+    since = db.scalar(
+        select(func.min(Artifact.era)).where(Artifact.status == STATUS_SELLADO)
+    ) or 2020
+    all_links = db.scalars(
+        select(Artifact.links).where(Artifact.status == STATUS_SELLADO)
+    ).all()
+    connections = sum(len(links or []) for links in all_links)
     schools = db.scalar(select(func.count()).select_from(School)) or 0
     mages = db.scalar(select(func.count()).select_from(User)) or 0
-    since = min((a.era for a in arts), default=2020)
     return StatsOut(
-        artifacts=len(arts),
-        connections=sum(len(a.links or []) for a in arts),
+        artifacts=artifact_count,
+        connections=connections,
         schools=schools,
         since=since,
         mages=mages,
@@ -39,11 +47,15 @@ def stats(db: Session = Depends(get_db)) -> StatsOut:
 @router.get("/runes")
 def runes(db: Session = Depends(get_db)) -> list[str]:
     seen = list(BASE_RUNES)
-    arts = db.scalars(select(Artifact).where(Artifact.status == STATUS_SELLADO)).all()
-    for a in arts:
-        for r in a.runes or []:
-            if r not in seen:
+    seen_set = set(BASE_RUNES)
+    all_runes = db.scalars(
+        select(Artifact.runes).where(Artifact.status == STATUS_SELLADO)
+    ).all()
+    for rune_list in all_runes:
+        for r in rune_list or []:
+            if r not in seen_set:
                 seen.append(r)
+                seen_set.add(r)
     return seen
 
 

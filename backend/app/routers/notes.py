@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
 from app.deps import get_current_user
@@ -26,7 +26,10 @@ def list_notes(artifact_id: str, db: Session = Depends(get_db)) -> list[NoteOut]
     if db.get(Artifact, artifact_id) is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Ese artefacto no consta en el grimorio")
     notes = db.scalars(
-        select(Note).where(Note.artifact_id == artifact_id).order_by(Note.created_at.desc())
+        select(Note)
+        .where(Note.artifact_id == artifact_id)
+        .order_by(Note.created_at.desc())
+        .options(joinedload(Note.user))
     ).all()
     return [_to_out(n) for n in notes]
 
