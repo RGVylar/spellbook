@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.artifact import STATUS_SELLADO, Artifact
 from app.models.user import User
+from app.schemas.artifact import ArtifactOut
 from app.schemas.auth import UserProfileOut
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -26,5 +27,8 @@ def get_profile(username: str, db: Session = Depends(get_db)) -> dict:
         "glyph": user.glyph,
         "created_at": user.created_at,
         "artifact_count": len(artifacts),
-        "artifacts": [{**a.__dict__, "user_reaction": None, "note_count": 0} for a in artifacts],
+        "artifacts": [
+            ArtifactOut.model_validate({**a.__dict__, "user_reaction": None, "note_count": 0})
+            for a in artifacts
+        ],
     }
