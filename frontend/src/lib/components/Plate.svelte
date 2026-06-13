@@ -42,7 +42,7 @@
 		position: absolute;
 		inset: 0;
 		padding: 12px 14px;
-		font-family: var(--font-ui);
+		font-family: var(--font-arcane);
 		font-size: 18px;
 		line-height: 1.5;
 		color: var(--gold-deep);
