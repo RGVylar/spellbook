@@ -53,6 +53,13 @@
 	const playable = $derived(art?.media === 'audio' || art?.media === 'video');
 	const isCurrent = $derived(player.current?.id === art?.id);
 
+	function ytVideoId(url: string | null | undefined): string | null {
+		if (!url) return null;
+		const m = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+		return m ? m[1] : null;
+	}
+	const ytId = $derived(ytVideoId(art?.sourceUrl));
+
 	let deleting = $state(false);
 	let confirmDelete = $state(false);
 	let videoError = $state(false);
@@ -203,16 +210,42 @@
 							style="width: 100%; display: block; border-radius: var(--r-md); background: #000"
 							onerror={() => { videoError = true; }}
 						></video>
-					{:else if (art.media === 'video' || art.media === 'audio') && (ingesting || !art.mediaUrl)}
-						<div style="padding: 40px 24px; text-align: center; color: var(--muted)">
-							<div class="t-arcane" style="font-size: 18px; color: var(--gold); margin-bottom: 10px">Preservando artefacto…</div>
-							<p style="font-size: 13px; margin: 0 0 16px">El grimorio está descargando el archivo. Aparecerá en unos momentos.</p>
-							{#if auth.isArchimago && art.sourceUrl && !ingesting}
-								<button class="btn cursor-star" onclick={retryIngest} disabled={ingestRetrying} style="font-size: 12.5px">
-									<Icon name="upload" s={14} /> {ingestRetrying ? 'Relanzando…' : 'Reintentar preservación'}
-								</button>
+					{:else if (art.media === 'video' || art.media === 'audio') && !art.mediaUrl}
+						{#if ytId && !ingesting}
+							<!-- Vídeo no preservado pero disponible en YouTube — mostrar embed -->
+							<div style="position: relative; padding-bottom: 56.25%; height: 0; border-radius: var(--r-md); overflow: hidden; background: #000">
+								<iframe
+									src="https://www.youtube.com/embed/{ytId}"
+									title={art.title}
+									frameborder="0"
+									allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+									allowfullscreen
+									style="position: absolute; inset: 0; width: 100%; height: 100%; border: 0"
+								></iframe>
+							</div>
+							{#if auth.isArchimago}
+								<div style="margin-top: 10px; display: flex; gap: 8px; align-items: center; justify-content: flex-end">
+									<span class="muted" style="font-size: 11.5px">Aún no preservado en el grimorio</span>
+									<button class="btn cursor-star" onclick={retryIngest} disabled={ingestRetrying} style="font-size: 12px; padding: 5px 10px">
+										<Icon name="upload" s={13} /> {ingestRetrying ? 'Relanzando…' : 'Preservar'}
+									</button>
+								</div>
 							{/if}
-						</div>
+						{:else}
+							<div style="padding: 40px 24px; text-align: center; color: var(--muted)">
+								<div class="t-arcane" style="font-size: 18px; color: var(--gold); margin-bottom: 10px">
+									{ingesting ? 'Preservando artefacto…' : 'Artefacto sin preservar'}
+								</div>
+								<p style="font-size: 13px; margin: 0 0 16px">
+									{ingesting ? 'El grimorio está descargando el archivo. Aparecerá en unos momentos.' : 'El archivo aún no ha sido preservado en el grimorio.'}
+								</p>
+								{#if auth.isArchimago && art.sourceUrl && !ingesting}
+									<button class="btn cursor-star" onclick={retryIngest} disabled={ingestRetrying} style="font-size: 12.5px">
+										<Icon name="upload" s={14} /> {ingestRetrying ? 'Relanzando…' : 'Reintentar preservación'}
+									</button>
+								{/if}
+							</div>
+						{/if}
 					{:else if videoError}
 						<div style="padding: 40px 24px; text-align: center; color: var(--muted)">
 							<div class="t-arcane" style="font-size: 18px; color: var(--ember); margin-bottom: 10px">El artefacto no pudo invocarse</div>
