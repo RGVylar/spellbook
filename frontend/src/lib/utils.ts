@@ -22,6 +22,12 @@ export function fmtTime(seconds: number): string {
 	return `${m}:${String(s).padStart(2, '0')}`;
 }
 
+export function fmtNum(n: number): string {
+	if (n >= 1_000_000) return `${+(n / 1_000_000).toFixed(1)}M`;
+	if (n >= 1_000) return `${+(n / 1_000).toFixed(1)}k`;
+	return String(n);
+}
+
 export function romanize(n: number): string {
 	const table: [number, string][] = [
 		[1000, 'M'], [900, 'CM'], [500, 'D'], [400, 'CD'], [100, 'C'], [90, 'XC'],

@@ -15,6 +15,7 @@ from app.models.artifact import (
     STATUS_SELLADO,
     Artifact,
     ArtifactReaction,
+    Note,
     School,
 )
 from app.models.user import User
@@ -71,7 +72,17 @@ def list_artifacts(
     rows = db.scalars(stmt).all()
     if rune:
         rows = [a for a in rows if rune in (a.runes or [])]
-    return rows
+    ids = [a.id for a in rows]
+    note_counts: dict[str, int] = {}
+    if ids:
+        note_counts = dict(
+            db.execute(
+                select(Note.artifact_id, func.count(Note.id))
+                .where(Note.artifact_id.in_(ids))
+                .group_by(Note.artifact_id)
+            ).all()
+        )
+    return [{**a.__dict__, "user_reaction": None, "note_count": note_counts.get(a.id, 0)} for a in rows]
 
 
 @router.get("/pending-count")
@@ -106,7 +117,10 @@ def get_artifact(
             )
         )
         user_reaction = row.reaction if row else None
-    return {**art.__dict__, "user_reaction": user_reaction}
+    note_count = db.scalar(
+        select(func.count(Note.id)).where(Note.artifact_id == artifact_id)
+    ) or 0
+    return {**art.__dict__, "user_reaction": user_reaction, "note_count": note_count}
 
 
 @router.post("", response_model=ArtifactOut, status_code=status.HTTP_201_CREATED)

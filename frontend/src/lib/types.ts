@@ -25,6 +25,7 @@ export interface Artifact {
 	views?: number;
 	likes?: number;
 	dislikes?: number;
+	noteCount?: number;
 	userReaction?: string | null;
 }
 

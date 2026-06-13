@@ -27,6 +27,7 @@ class ArtifactOut(CamelModel):
     views: int = 0
     likes: int = 0
     dislikes: int = 0
+    note_count: int = 0
     user_reaction: str | None = None
 
 
