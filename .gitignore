@@ -18,6 +18,9 @@ media/*
 # Design handoff (referencia local)
 _handoff/
 
+# Secretos locales
+.secrets
+
 # OS
 .DS_Store
 Thumbs.db

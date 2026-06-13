@@ -40,6 +40,8 @@
 	let done = $state<Artifact | null>(null);
 	let submitting = $state(false);
 	let error = $state('');
+	let mediaFile = $state<File | null>(null);
+	let mediaIngesting = $state(false);
 
 	// Modo edición (solo Archimago): carga el artefacto existente
 	$effect(() => {
@@ -108,6 +110,29 @@
 			const art = isEditing
 				? await api.patch<Artifact>(`/artifacts/${editId}`, payload)
 				: await api.post<Artifact>('/artifacts', payload);
+
+			// Preservar el archivo si se seleccionó uno o hay URL
+			if (mediaFile || sourceUrl.trim()) {
+				mediaIngesting = true;
+				try {
+					const form = new FormData();
+					if (mediaFile) {
+						form.append('file', mediaFile);
+					} else if (sourceUrl.trim()) {
+						form.append('source_url', sourceUrl.trim());
+					}
+					await fetch(`/api/artifacts/${art.id}/media`, {
+						method: 'POST',
+						headers: { Authorization: `Bearer ${auth.token}` },
+						body: form
+					});
+				} catch {
+					// preservación fallida no bloquea el sellado
+				} finally {
+					mediaIngesting = false;
+				}
+			}
+
 			await catalog.load(true);
 			setTimeout(() => (done = art), 650);
 		} catch (e) {
@@ -131,6 +156,7 @@
 		runes = [];
 		links = [];
 		variantOf = null;
+		mediaFile = null;
 	}
 </script>
 
@@ -257,11 +283,74 @@
 				</div>
 			</div>
 
+			{#if type && type !== 'pergamino'}
 			<div class="field">
-				<label for="f-url">URL de origen <span class="muted" style="font-size: 12px">(opcional · YouTube, TikTok…)</span></label>
-				<input id="f-url" class="input" placeholder="https:// — será preservado por el escriba mecánico" bind:value={sourceUrl} />
-				<div class="hint">La preservación automática (yt-dlp) llegará en una futura luna; la URL queda sellada ya.</div>
+				<label>Preservar el archivo</label>
+				<div class="glass" style="border-radius: var(--r-md); padding: 16px 18px; display: flex; flex-direction: column; gap: 12px">
+					<!-- Subida directa -->
+					<div>
+						<div class="muted" style="font-size: 12px; margin-bottom: 6px">SUBIR ARCHIVO</div>
+						<label
+							class="upload-drop cursor-star"
+							style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border: 1px dashed rgba(201,168,76,.3); border-radius: var(--r-md); cursor: pointer; transition: border-color .15s"
+							onmouseenter={(e) => (e.currentTarget.style.borderColor = 'rgba(201,168,76,.7)')}
+							onmouseleave={(e) => (e.currentTarget.style.borderColor = 'rgba(201,168,76,.3)')}
+						>
+							<Icon name="upload" s={20} style="color: var(--gold); flex: 0 0 auto" />
+							<div style="flex: 1; min-width: 0">
+								{#if mediaFile}
+									<div style="font-size: 13px; font-weight: 600; color: var(--parchment); overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{mediaFile.name}</div>
+									<div class="muted" style="font-size: 11.5px">{(mediaFile.size / 1024 / 1024).toFixed(1)} MB</div>
+								{:else}
+									<div style="font-size: 13px">Arrastra o haz clic para elegir</div>
+									<div class="muted" style="font-size: 11.5px">imagen, vídeo o audio · máx. 200 MB</div>
+								{/if}
+							</div>
+							{#if mediaFile}
+								<button
+									type="button"
+									class="cursor-star"
+									style="background: none; border: none; color: var(--muted); padding: 4px"
+									onclick={(e) => { e.preventDefault(); mediaFile = null; }}
+								>
+									<Icon name="close" s={14} />
+								</button>
+							{/if}
+							<input
+								type="file"
+								style="display: none"
+								accept="image/*,video/*,audio/*"
+								onchange={(e) => { const f = (e.currentTarget as HTMLInputElement).files?.[0]; if (f) mediaFile = f; }}
+							/>
+						</label>
+					</div>
+					<!-- Separador -->
+					<div style="display: flex; align-items: center; gap: 10px">
+						<div style="flex: 1; height: 1px; background: rgba(201,168,76,.12)"></div>
+						<span class="muted" style="font-size: 11px">O DESDE URL</span>
+						<div style="flex: 1; height: 1px; background: rgba(201,168,76,.12)"></div>
+					</div>
+					<!-- URL -->
+					<div>
+						<input
+							id="f-url"
+							class="input"
+							placeholder="https:// — YouTube, TikTok, Reddit, enlace directo a imagen…"
+							bind:value={sourceUrl}
+							style="margin: 0"
+						/>
+						<div class="hint" style="margin-top: 6px">
+							{sourceUrl.trim() && !mediaFile ? 'El escriba mecánico descargará y preservará el archivo en el servidor.' : 'Si subes archivo y añades URL, el archivo subido tiene preferencia.'}
+						</div>
+					</div>
+				</div>
 			</div>
+			{:else}
+			<div class="field">
+				<label for="f-url">URL de origen <span class="muted" style="font-size: 12px">(opcional · referencia)</span></label>
+				<input id="f-url" class="input" placeholder="https://" bind:value={sourceUrl} />
+			</div>
+			{/if}
 
 			<div class="field">
 				<label for="f-school">Escuela de magia</label>

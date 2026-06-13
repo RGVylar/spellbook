@@ -31,7 +31,8 @@
 		key: { body: '<circle cx="8" cy="15" r="4" /><path d="M11 12l8-8M17 5l2 2M14 8l2 2" />' },
 		user: { body: '<circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6" />' },
 		logout: { body: '<path d="M14 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2" /><path d="M9 12h12l-3-3M18 15l3-3" />' },
-		variant: { body: '<circle cx="12" cy="5" r="2.5" /><circle cx="6" cy="18" r="2.5" /><circle cx="18" cy="18" r="2.5" /><path d="M12 7.5v3M12 10.5l-5 5M12 10.5l5 5" />' }
+		variant: { body: '<circle cx="12" cy="5" r="2.5" /><circle cx="6" cy="18" r="2.5" /><circle cx="18" cy="18" r="2.5" /><path d="M12 7.5v3M12 10.5l-5 5M12 10.5l5 5" />' },
+		upload: { body: '<path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" /><path d="M12 15V3M8 7l4-4 4 4" />' }
 	};
 
 	export type IconName = keyof typeof ICONS;

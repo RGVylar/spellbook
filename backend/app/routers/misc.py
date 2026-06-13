@@ -44,9 +44,18 @@ def runes(db: Session = Depends(get_db)) -> list[str]:
     return seen
 
 
+_MIME = {
+    '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png',
+    '.gif': 'image/gif', '.webp': 'image/webp', '.avif': 'image/avif',
+    '.mp4': 'video/mp4', '.webm': 'video/webm',
+    '.mp3': 'audio/mpeg', '.ogg': 'audio/ogg', '.wav': 'audio/wav',
+}
+
+
 @router.get("/media/{artifact_id}")
 def media(artifact_id: str) -> FileResponse:
     path = media_path_for(artifact_id)
     if path is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Este artefacto aún no fue preservado")
-    return FileResponse(path)
+    mime = _MIME.get(path.suffix.lower(), 'application/octet-stream')
+    return FileResponse(path, media_type=mime)

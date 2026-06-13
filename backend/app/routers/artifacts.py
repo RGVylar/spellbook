@@ -1,13 +1,15 @@
 import asyncio
 import re
+import threading
 import unicodedata
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.deps import get_archimago_user, get_current_user, get_moderator_user, get_optional_user
+from app.ingest import ingest_url_background, media_path_for, save_upload
 from app.models.artifact import (
     STATUS_PENDIENTE,
     STATUS_SELLADO,
@@ -158,6 +160,42 @@ def update_artifact(
     db.commit()
     db.refresh(art)
     return art
+
+
+@router.post("/{artifact_id}/media")
+async def upload_media(
+    artifact_id: str,
+    file: UploadFile | None = File(None),
+    source_url: str | None = Form(None),
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> dict:
+    """Preserva el archivo de un artefacto: subida directa o ingestión desde URL."""
+    art = db.get(Artifact, artifact_id)
+    if art is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Ese artefacto no consta en el grimorio")
+    if not user.is_moderator and art.created_by_id != user.id:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Solo puedes preservar tus propios artefactos")
+
+    if file is not None:
+        data = await file.read()
+        if len(data) > 200 * 1024 * 1024:  # 200 MB
+            raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "El archivo supera los 200 MB")
+        ext = save_upload(data, file.filename or f"media{artifact_id}", artifact_id)
+        art.media_url = f"/api/media/{artifact_id}"
+        db.commit()
+        return {"mediaUrl": art.media_url, "status": "ready", "ext": ext}
+
+    if source_url:
+        # Lanza la descarga en segundo plano para no bloquear la respuesta
+        threading.Thread(
+            target=ingest_url_background,
+            args=(source_url, artifact_id),
+            daemon=True,
+        ).start()
+        return {"mediaUrl": None, "status": "ingesting"}
+
+    raise HTTPException(status.HTTP_400_BAD_REQUEST, "Proporciona file o source_url")
 
 
 @router.patch("/{artifact_id}/status", response_model=ArtifactOut)

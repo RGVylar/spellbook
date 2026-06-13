@@ -125,7 +125,14 @@
 				<div class="card flat" style="margin-bottom: 24px">
 					<Corner cls="tl" /><Corner cls="tr" /><Corner cls="bl" /><Corner cls="br" />
 					{#if art.media === 'image' && art.mediaUrl}
-						<img src={art.mediaUrl} alt={art.title} style="width: 100%; display: block" />
+						<img src={art.mediaUrl} alt={art.title} style="width: 100%; display: block; border-radius: var(--r-md)" />
+					{:else if art.media === 'video' && art.mediaUrl}
+						<video
+							src={art.mediaUrl}
+							controls
+							loop
+							style="width: 100%; display: block; border-radius: var(--r-md); background: #000"
+						></video>
 					{:else}
 						<Plate {art} big />
 					{/if}

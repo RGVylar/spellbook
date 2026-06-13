@@ -1,20 +1,28 @@
-"""Ingestión de URLs con yt-dlp — TODO (estructura preparada).
+"""Preservación de medios: subida directa y descarga desde URL (yt-dlp + httpx)."""
+from __future__ import annotations
 
-Flujo previsto cuando se implemente:
-  1. extract_metadata(url) llama a yt-dlp (-J) para obtener título, canal,
-     duración, año y thumbnail sin descargar nada.
-  2. El formulario de Invocar/Proponer se autorrellena con esos metadatos.
-  3. download(url, artifact_id) descarga el archivo a
-     settings.media_dir / f"{artifact_id}.{ext}" y devuelve la ruta.
-  4. El artefacto guarda source_url (origen) y media_url (/api/media/{id}),
-     quedando preservado localmente aunque el original desaparezca.
-"""
-
+import re
+import threading
 from pathlib import Path
+
+import httpx
 
 from app.config import settings
 
 MEDIA_DIR = Path(settings.media_dir)
+
+_IMAGE_EXT_RE = re.compile(r'\.(jpe?g|png|gif|webp|avif|bmp)(\?.*)?$', re.IGNORECASE)
+_CT_TO_EXT = {
+    'image/jpeg': '.jpg', 'image/jpg': '.jpg',
+    'image/png': '.png', 'image/gif': '.gif',
+    'image/webp': '.webp', 'image/avif': '.avif',
+    'video/mp4': '.mp4', 'video/webm': '.webm',
+    'audio/mpeg': '.mp3', 'audio/mp3': '.mp3',
+    'audio/ogg': '.ogg', 'audio/wav': '.wav',
+}
+
+# Un semáforo para no saturar el servidor con descargas paralelas
+_DL_SEMAPHORE = threading.Semaphore(3)
 
 
 def media_path_for(artifact_id: str) -> Path | None:
@@ -27,11 +35,84 @@ def media_path_for(artifact_id: str) -> Path | None:
     return None
 
 
-async def extract_metadata(url: str) -> dict:
-    """TODO: yt-dlp -J {url} → {title, channel, duration, year, thumbnail}."""
-    raise NotImplementedError("La ingestión con yt-dlp aún no está implementada")
+def save_upload(data: bytes, original_filename: str, artifact_id: str) -> str:
+    """Guarda bytes subidos directamente. Devuelve la extensión (.jpg, .mp4…)."""
+    ext = Path(original_filename).suffix.lower() or '.bin'
+    MEDIA_DIR.mkdir(parents=True, exist_ok=True)
+    dest = MEDIA_DIR / f"{artifact_id}{ext}"
+    dest.write_bytes(data)
+    return ext
 
 
-async def download(url: str, artifact_id: str) -> Path:
-    """TODO: yt-dlp -o MEDIA_DIR/{artifact_id}.%(ext)s {url}."""
-    raise NotImplementedError("La ingestión con yt-dlp aún no está implementada")
+def _is_direct_image(url: str) -> bool:
+    return bool(_IMAGE_EXT_RE.search(url.split('?')[0]))
+
+
+def _download_image(url: str, artifact_id: str) -> str:
+    """Descarga imagen directa vía httpx. Devuelve extensión."""
+    with httpx.Client(follow_redirects=True, timeout=30) as client:
+        r = client.get(url, headers={'User-Agent': 'Mozilla/5.0 (compatible; Spellbook/1.0)'})
+        r.raise_for_status()
+        ct = r.headers.get('content-type', '').split(';')[0].strip()
+        ext = _CT_TO_EXT.get(ct) or Path(url.split('?')[0]).suffix.lower() or '.jpg'
+        MEDIA_DIR.mkdir(parents=True, exist_ok=True)
+        (MEDIA_DIR / f"{artifact_id}{ext}").write_bytes(r.content)
+        return ext
+
+
+def _run_ytdlp(url: str, artifact_id: str) -> str:
+    """Descarga con yt-dlp (vídeo/audio). Devuelve extensión."""
+    try:
+        import yt_dlp
+    except ImportError:
+        raise RuntimeError("yt-dlp no está instalado en este entorno")
+
+    MEDIA_DIR.mkdir(parents=True, exist_ok=True)
+    outtmpl = str(MEDIA_DIR / f"{artifact_id}.%(ext)s")
+    ydl_opts = {
+        'outtmpl': outtmpl,
+        'quiet': True,
+        'no_warnings': True,
+        'noplaylist': True,
+        'format': (
+            'bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]'
+            '/best[height<=720][ext=mp4]/best[ext=mp4]/best'
+        ),
+        'merge_output_format': 'mp4',
+        'socket_timeout': 30,
+        'retries': 3,
+        'fragment_retries': 3,
+    }
+    with _DL_SEMAPHORE:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([url])
+
+    path = media_path_for(artifact_id)
+    if path is None:
+        raise RuntimeError("yt-dlp no produjo ningún archivo de salida")
+    return path.suffix
+
+
+def ingest_url_background(url: str, artifact_id: str) -> None:
+    """Descarga url y actualiza media_url en el artefacto. Diseñado para correr en hilo."""
+    from app.database import SessionLocal
+    from app.models.artifact import Artifact
+
+    print(f"[INGEST] Iniciando preservación de {artifact_id} desde {url}")
+    try:
+        if _is_direct_image(url):
+            ext = _download_image(url, artifact_id)
+        else:
+            ext = _run_ytdlp(url, artifact_id)
+
+        db = SessionLocal()
+        try:
+            art = db.get(Artifact, artifact_id)
+            if art:
+                art.media_url = f"/api/media/{artifact_id}"
+                db.commit()
+            print(f"[INGEST] Preservado {artifact_id}{ext} ✓")
+        finally:
+            db.close()
+    except Exception as exc:
+        print(f"[INGEST] Error preservando {artifact_id}: {exc}")
