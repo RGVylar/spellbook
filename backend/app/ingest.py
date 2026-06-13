@@ -126,6 +126,7 @@ def ingest_url_background(url: str, artifact_id: str) -> None:
     """Descarga url y actualiza media_url/thumbnail_url en el artefacto. Corre en hilo."""
     from app.database import SessionLocal
     from app.models.artifact import Artifact
+    from app.telegram import send_ingest_error_sync, send_ingest_success_sync
 
     print(f"[INGEST] Iniciando preservación de {artifact_id} desde {url}")
     try:
@@ -135,6 +136,9 @@ def ingest_url_background(url: str, artifact_id: str) -> None:
         else:
             ext, thumbnail_url = _run_ytdlp(url, artifact_id)
 
+        path = media_path_for(artifact_id)
+        size_mb = path.stat().st_size / 1_048_576 if path else 0.0
+
         db = SessionLocal()
         try:
             art = db.get(Artifact, artifact_id)
@@ -143,8 +147,14 @@ def ingest_url_background(url: str, artifact_id: str) -> None:
                 if thumbnail_url:
                     art.thumbnail_url = thumbnail_url
                 db.commit()
-            print(f"[INGEST] Preservado {artifact_id}{ext} ✓")
         finally:
             db.close()
+
+        print(f"[INGEST] Preservado {artifact_id}{ext} ({size_mb:.1f} MB) ✓")
+        send_ingest_success_sync(artifact_id, url, ext, size_mb)
+
     except Exception as exc:
+        import traceback as _tb
         print(f"[INGEST] Error preservando {artifact_id}: {exc}")
+        print(_tb.format_exc())
+        send_ingest_error_sync(artifact_id, url, exc)

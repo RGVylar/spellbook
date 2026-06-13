@@ -162,6 +162,26 @@ def update_artifact(
     return art
 
 
+@router.get("/{artifact_id}/ingest-status")
+def ingest_status(
+    artifact_id: str,
+    db: Session = Depends(get_db),
+) -> dict:
+    """Devuelve el estado de preservación de un artefacto (para polling del frontend)."""
+    art = db.get(Artifact, artifact_id)
+    if art is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Ese artefacto no consta en el grimorio")
+    path = media_path_for(artifact_id)
+    size_mb = round(path.stat().st_size / 1_048_576, 2) if path else None
+    return {
+        "mediaUrl": art.media_url,
+        "thumbnailUrl": art.thumbnail_url,
+        "fileReady": path is not None,
+        "sizeMb": size_mb,
+        "ext": path.suffix if path else None,
+    }
+
+
 @router.post("/{artifact_id}/media")
 async def upload_media(
     artifact_id: str,

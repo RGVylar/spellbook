@@ -9,20 +9,36 @@ from app.config import settings
 
 TELEGRAM_API = "https://api.telegram.org/bot{token}/sendMessage"
 
+_PAYLOAD_BASE = {"parse_mode": "Markdown"}
+
+
+def _payload(text: str) -> dict:
+    return {**_PAYLOAD_BASE, "chat_id": settings.telegram_chat_id, "text": text}
+
 
 async def _send(text: str) -> None:
-    """Fire-and-forget. Silently ignores send failures."""
+    """Fire-and-forget async. Silently ignores send failures."""
     if not settings.telegram_bot_token or not settings.telegram_chat_id:
         return
     try:
         async with httpx.AsyncClient(timeout=5) as client:
             await client.post(
                 TELEGRAM_API.format(token=settings.telegram_bot_token),
-                json={
-                    "chat_id": settings.telegram_chat_id,
-                    "text": text,
-                    "parse_mode": "Markdown",
-                },
+                json=_payload(text),
+            )
+    except Exception:
+        pass
+
+
+def _send_sync(text: str) -> None:
+    """Fire-and-forget sync (para hilos de background). Silently ignores failures."""
+    if not settings.telegram_bot_token or not settings.telegram_chat_id:
+        return
+    try:
+        with httpx.Client(timeout=5) as client:
+            client.post(
+                TELEGRAM_API.format(token=settings.telegram_bot_token),
+                json=_payload(text),
             )
     except Exception:
         pass
@@ -67,3 +83,30 @@ async def send_proposal_alert(username: str, title: str, artifact_id: str) -> No
         f"🕐 {_now()}"
     )
     await _send(text)
+
+
+def send_ingest_success_sync(artifact_id: str, url: str, ext: str, size_mb: float) -> None:
+    """Preservación completada con éxito (sync, para hilos)."""
+    text = (
+        f"✅ *[spellbook]* Preservado\n\n"
+        f"*Artefacto:* `{artifact_id}`\n"
+        f"*Formato:* `{ext}` · *Peso:* {size_mb:.1f} MB\n"
+        f"*Fuente:* `{url[:80]}`\n\n"
+        f"🕐 {_now()}"
+    )
+    _send_sync(text)
+
+
+def send_ingest_error_sync(artifact_id: str, url: str, exc: Exception) -> None:
+    """Preservación fallida (sync, para hilos)."""
+    tb_lines = traceback.format_exception(type(exc), exc, exc.__traceback__)
+    tb_short = "".join(tb_lines[-6:]).strip()
+    text = (
+        f"⚠️ *[spellbook]* Ingest fallido\n\n"
+        f"*Artefacto:* `{artifact_id}`\n"
+        f"*Fuente:* `{url[:80]}`\n"
+        f"`{type(exc).__name__}: {exc}`\n\n"
+        f"```\n{tb_short}\n```\n\n"
+        f"🕐 {_now()}"
+    )
+    _send_sync(text)

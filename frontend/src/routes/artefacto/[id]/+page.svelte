@@ -55,6 +55,40 @@
 
 	let deleting = $state(false);
 	let confirmDelete = $state(false);
+	let videoError = $state(false);
+	let ingesting = $state(false);
+	let ingestPollTimer: ReturnType<typeof setInterval> | null = null;
+
+	function startIngestPoll(artifactId: string) {
+		if (ingestPollTimer) return;
+		ingesting = true;
+		ingestPollTimer = setInterval(async () => {
+			try {
+				const s = await api.get<{ mediaUrl: string | null; thumbnailUrl: string | null; fileReady: boolean }>(
+					`/artifacts/${artifactId}/ingest-status`
+				);
+				if (s.fileReady && s.mediaUrl) {
+					if (art) {
+						art.mediaUrl = s.mediaUrl;
+						if (s.thumbnailUrl) art.thumbnailUrl = s.thumbnailUrl;
+					}
+					ingesting = false;
+					if (ingestPollTimer) { clearInterval(ingestPollTimer); ingestPollTimer = null; }
+				}
+			} catch { /* sigue intentando */ }
+		}, 4000);
+	}
+
+	$effect(() => {
+		// Arranca polling si el artefacto necesita preservación pero no tiene archivo aún
+		if (art && art.media !== 'pergamino' && !art.mediaUrl) {
+			startIngestPoll(art.id);
+		}
+		return () => {
+			if (ingestPollTimer) { clearInterval(ingestPollTimer); ingestPollTimer = null; }
+			ingesting = false;
+		};
+	});
 
 	async function deleteArt() {
 		if (!art || deleting) return;
@@ -144,13 +178,29 @@
 					<Corner cls="tl" /><Corner cls="tr" /><Corner cls="bl" /><Corner cls="br" />
 					{#if art.media === 'image' && art.mediaUrl}
 						<img src={art.mediaUrl} alt={art.title} style="width: 100%; display: block; border-radius: var(--r-md)" />
-					{:else if art.media === 'video' && art.mediaUrl}
+					{:else if art.media === 'video' && art.mediaUrl && !videoError}
 						<video
 							src={art.mediaUrl}
 							controls
 							loop
 							style="width: 100%; display: block; border-radius: var(--r-md); background: #000"
+							onerror={() => { videoError = true; }}
 						></video>
+					{:else if (art.media === 'video' || art.media === 'audio') && (ingesting || !art.mediaUrl)}
+						<div style="padding: 40px 24px; text-align: center; color: var(--muted)">
+							<div class="t-arcane" style="font-size: 18px; color: var(--gold); margin-bottom: 10px">Preservando artefacto…</div>
+							<p style="font-size: 13px; margin: 0">El grimorio está descargando el archivo. Aparecerá en unos momentos.</p>
+						</div>
+					{:else if videoError}
+						<div style="padding: 40px 24px; text-align: center; color: var(--muted)">
+							<div class="t-arcane" style="font-size: 18px; color: var(--ember); margin-bottom: 10px">El artefacto no pudo invocarse</div>
+							<p style="font-size: 13px; margin: 0 0 14px">El formato del archivo no es compatible con el navegador.</p>
+							{#if art.sourceUrl}
+								<a href={art.sourceUrl} target="_blank" rel="noopener noreferrer" class="btn cursor-star" style="font-size: 12.5px">
+									<Icon name="link" s={14} /> Ver fuente original
+								</a>
+							{/if}
+						</div>
 					{:else}
 						<Plate {art} big />
 					{/if}
