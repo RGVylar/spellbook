@@ -57,7 +57,24 @@
 	let confirmDelete = $state(false);
 	let videoError = $state(false);
 	let ingesting = $state(false);
+	let ingestRetrying = $state(false);
 	let ingestPollTimer: ReturnType<typeof setInterval> | null = null;
+
+	async function retryIngest() {
+		if (!art?.sourceUrl || ingestRetrying) return;
+		ingestRetrying = true;
+		videoError = false;
+		try {
+			const fd = new FormData();
+			fd.append('source_url', art.sourceUrl);
+			await api.postForm(`/artifacts/${art.id}/media`, fd);
+			startIngestPoll(art.id);
+		} catch (e) {
+			console.error('retryIngest:', e);
+		} finally {
+			ingestRetrying = false;
+		}
+	}
 
 	function startIngestPoll(artifactId: string) {
 		if (ingestPollTimer) return;
@@ -81,7 +98,7 @@
 
 	$effect(() => {
 		// Arranca polling si el artefacto necesita preservación pero no tiene archivo aún
-		if (art && art.media !== 'pergamino' && !art.mediaUrl) {
+		if (art && art.media !== 'text' && !art.mediaUrl) {
 			startIngestPoll(art.id);
 		}
 		return () => {
@@ -189,7 +206,12 @@
 					{:else if (art.media === 'video' || art.media === 'audio') && (ingesting || !art.mediaUrl)}
 						<div style="padding: 40px 24px; text-align: center; color: var(--muted)">
 							<div class="t-arcane" style="font-size: 18px; color: var(--gold); margin-bottom: 10px">Preservando artefacto…</div>
-							<p style="font-size: 13px; margin: 0">El grimorio está descargando el archivo. Aparecerá en unos momentos.</p>
+							<p style="font-size: 13px; margin: 0 0 16px">El grimorio está descargando el archivo. Aparecerá en unos momentos.</p>
+							{#if auth.isArchimago && art.sourceUrl && !ingesting}
+								<button class="btn cursor-star" onclick={retryIngest} disabled={ingestRetrying} style="font-size: 12.5px">
+									<Icon name="upload" s={14} /> {ingestRetrying ? 'Relanzando…' : 'Reintentar preservación'}
+								</button>
+							{/if}
 						</div>
 					{:else if videoError}
 						<div style="padding: 40px 24px; text-align: center; color: var(--muted)">
