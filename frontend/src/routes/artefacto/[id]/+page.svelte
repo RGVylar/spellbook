@@ -264,8 +264,8 @@
 							onerror={() => { videoError = true; }}
 						></video>
 					{:else if (art.media === 'video' || art.media === 'audio') && !art.mediaUrl}
-						{#if ytId && !ingesting}
-							<!-- Vídeo no preservado pero disponible en YouTube — mostrar embed -->
+						{#if ytId}
+							<!-- sourceUrl de YouTube — embed directo, el archivo se puede preservar aparte -->
 							<div style="position: relative; padding-bottom: 56.25%; height: 0; border-radius: var(--r-md); overflow: hidden; background: #000">
 								<iframe
 									src="https://www.youtube.com/embed/{ytId}"
@@ -278,13 +278,18 @@
 							</div>
 							{#if auth.isArchimago}
 								<div style="margin-top: 10px; display: flex; gap: 8px; align-items: center; justify-content: flex-end">
-									<span class="muted" style="font-size: 11.5px">Aún no preservado en el grimorio</span>
-									<button class="btn cursor-star" onclick={retryIngest} disabled={ingestRetrying} style="font-size: 12px; padding: 5px 10px">
-										<Icon name="upload" s={13} /> {ingestRetrying ? 'Relanzando…' : 'Preservar'}
-									</button>
+									<span class="muted" style="font-size: 11.5px">
+										{ingesting ? 'Preservando en el grimorio…' : 'Aún no preservado en el grimorio'}
+									</span>
+									{#if !ingesting}
+										<button class="btn cursor-star" onclick={retryIngest} disabled={ingestRetrying} style="font-size: 12px; padding: 5px 10px">
+											<Icon name="upload" s={13} /> {ingestRetrying ? 'Relanzando…' : 'Preservar'}
+										</button>
+									{/if}
 								</div>
 							{/if}
 						{:else}
+							<!-- Sin YouTube y sin archivo — mostrar estado -->
 							<div style="padding: 40px 24px; text-align: center; color: var(--muted)">
 								<div class="t-arcane" style="font-size: 18px; color: var(--gold); margin-bottom: 10px">
 									{ingesting ? 'Preservando artefacto…' : 'Artefacto sin preservar'}
