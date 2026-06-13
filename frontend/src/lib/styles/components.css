@@ -221,6 +221,23 @@
 .player .ptime { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; flex: 0 0 auto; }
 .pbar { flex: 0 0 200px; height: 4px; border-radius: 9px; background: rgba(201,168,76,.16); overflow: hidden; cursor: pointer; }
 .pbar > i { display: block; height: 100%; background: linear-gradient(90deg, var(--gold-deep), var(--gold-bright)); }
+/* ---------- Era slider (explorar) ---------- */
+.era-inputs { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.era-inp-wrap { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 1; }
+.era-inp-label { font-size: 10px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+.era-inp { width: 100%; text-align: center; font-size: 14px; font-weight: 600; color: var(--gold-bright); background: rgba(201,168,76,.07); border: 1px solid rgba(201,168,76,.25); border-radius: var(--r-sm); padding: 4px 6px; outline: none; font-family: var(--font-ui); }
+.era-inp:focus { border-color: rgba(201,168,76,.6); background: rgba(201,168,76,.12); }
+.era-sep { font-size: 16px; color: var(--faint); padding-top: 14px; flex: 0 0 auto; }
+.era-bar-wrap { padding: 0 4px; }
+.era-bar { position: relative; height: 28px; }
+.era-track { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); height: 3px; background: rgba(201,168,76,.1); border-radius: 2px; }
+.era-fill { position: absolute; height: 3px; background: rgba(201,168,76,.45); border-radius: 2px; top: 0; }
+.era-thumb { position: absolute; width: 16px; height: 16px; border-radius: 50%; background: var(--gold); border: 2px solid var(--bg); top: 50%; transform: translate(-50%, -50%); z-index: 2; transition: box-shadow .12s; }
+.era-thumb:hover { box-shadow: 0 0 0 5px rgba(201,168,76,.18); }
+.era-minmax { display: flex; justify-content: space-between; font-size: 10px; color: var(--faint); margin-top: 3px; }
+.era-hint { font-size: 11.5px; color: var(--muted); margin-top: 8px; }
+.era-hint strong { color: var(--gold-bright); font-weight: 600; }
+
 /* Fondo opaco para dropdowns/popovers flotantes (sobreescribe .glass) */
 .popup {
   background: rgba(10, 8, 16, 0.97) !important;

@@ -14,18 +14,41 @@
 		page.url.searchParams.get('school') ? [page.url.searchParams.get('school')!] : []
 	);
 	let runes = $state<string[]>(page.url.searchParams.get('rune') ? [page.url.searchParams.get('rune')!] : []);
-	let eras = $state<number[]>(page.url.searchParams.get('era') ? [Number(page.url.searchParams.get('era'))] : []);
+	const ERA_MIN = 1970;
+	const ERA_MAX = new Date().getFullYear();
+
+	const initEra = page.url.searchParams.get('era');
+	let eraA = $state(initEra ? Number(initEra) : ERA_MIN);
+	let eraB = $state(ERA_MAX);
+
+	const eraFrom = $derived(Math.min(eraA, eraB));
+	const eraTo   = $derived(Math.max(eraA, eraB));
+	const eraActive = $derived(eraFrom > ERA_MIN || eraTo < ERA_MAX);
+
+	let barEl = $state<HTMLDivElement | undefined>();
+
+	function startDrag(which: 'A' | 'B') {
+		function onMove(e: MouseEvent) {
+			if (!barEl) return;
+			const r = barEl.getBoundingClientRect();
+			const yr = Math.round(ERA_MIN + Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * (ERA_MAX - ERA_MIN));
+			if (which === 'A') eraA = yr; else eraB = yr;
+		}
+		function onUp() { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); }
+		window.addEventListener('mousemove', onMove);
+		window.addEventListener('mouseup', onUp);
+	}
+
+	function commitEraInput(which: 'A' | 'B', raw: string) {
+		const v = parseInt(raw);
+		if (isNaN(v)) return;
+		const clamped = Math.max(ERA_MIN, Math.min(ERA_MAX, v));
+		if (which === 'A') eraA = clamped; else eraB = clamped;
+	}
 
 	function toggle(arr: string[], v: string): string[] {
 		return arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
 	}
-	function toggleNum(arr: number[], v: number): number[] {
-		return arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
-	}
-
-	const availableEras = $derived(
-		[...new Set(catalog.artifacts.map((a) => a.era))].sort((a, b) => b - a)
-	);
 
 	const filtered = $derived(
 		catalog.artifacts.filter(
@@ -33,11 +56,11 @@
 				(types.length === 0 || types.includes(a.type)) &&
 				(schools.length === 0 || schools.includes(a.school)) &&
 				(runes.length === 0 || runes.some((r) => a.runes.includes(r))) &&
-				(eras.length === 0 || eras.includes(a.era))
+				(!eraActive || (a.era >= eraFrom && a.era <= eraTo))
 		)
 	);
 
-	const hasFilters = $derived(types.length > 0 || schools.length > 0 || runes.length > 0 || eras.length > 0);
+	const hasFilters = $derived(types.length > 0 || schools.length > 0 || runes.length > 0 || eraActive);
 </script>
 
 <svelte:head><title>Explorador · SPELLBOOK</title></svelte:head>
@@ -89,21 +112,60 @@
 			</div>
 			<div class="fgroup">
 				<h4>Época</h4>
-				{#each availableEras as era (era)}
-					<div
-						class="fitem cursor-star"
-						class:on={eras.includes(era)}
-						role="checkbox"
-						aria-checked={eras.includes(era)}
-						tabindex="0"
-						onclick={() => (eras = toggleNum(eras, era))}
-						onkeydown={(e) => e.key === 'Enter' && (eras = toggleNum(eras, era))}
-					>
-						<span class="fcheck">{#if eras.includes(era)}<Icon name="check" s={12} />{/if}</span>
-						{era}
-						<span class="fcount">{catalog.artifacts.filter((a) => a.era === era).length}</span>
+				<div class="era-inputs">
+					<div class="era-inp-wrap">
+						<div class="era-inp-label">desde</div>
+						<input
+							class="era-inp"
+							type="text"
+							inputmode="numeric"
+							value={eraFrom}
+							onblur={(e) => commitEraInput('A', (e.target as HTMLInputElement).value)}
+							onkeydown={(e) => { if (e.key === 'Enter') { commitEraInput('A', (e.target as HTMLInputElement).value); (e.target as HTMLInputElement).blur(); } }}
+						/>
 					</div>
-				{/each}
+					<span class="era-sep">—</span>
+					<div class="era-inp-wrap">
+						<div class="era-inp-label">hasta</div>
+						<input
+							class="era-inp"
+							type="text"
+							inputmode="numeric"
+							value={eraTo}
+							onblur={(e) => commitEraInput('B', (e.target as HTMLInputElement).value)}
+							onkeydown={(e) => { if (e.key === 'Enter') { commitEraInput('B', (e.target as HTMLInputElement).value); (e.target as HTMLInputElement).blur(); } }}
+						/>
+					</div>
+				</div>
+				<div class="era-bar-wrap">
+					<div class="era-bar" bind:this={barEl}>
+						<div class="era-track">
+							<div class="era-fill" style="left:{((eraFrom-ERA_MIN)/(ERA_MAX-ERA_MIN))*100}%; width:{((eraTo-eraFrom)/(ERA_MAX-ERA_MIN))*100}%"></div>
+						</div>
+						<div
+							class="era-thumb cursor-star"
+							style="left:{((eraA-ERA_MIN)/(ERA_MAX-ERA_MIN))*100}%"
+							role="slider" aria-label="Año inicio" aria-valuemin={ERA_MIN} aria-valuemax={ERA_MAX} aria-valuenow={eraA}
+							tabindex="0"
+							onmousedown={() => startDrag('A')}
+						></div>
+						<div
+							class="era-thumb cursor-star"
+							style="left:{((eraB-ERA_MIN)/(ERA_MAX-ERA_MIN))*100}%"
+							role="slider" aria-label="Año fin" aria-valuemin={ERA_MIN} aria-valuemax={ERA_MAX} aria-valuenow={eraB}
+							tabindex="0"
+							onmousedown={() => startDrag('B')}
+						></div>
+					</div>
+					<div class="era-minmax">
+						<span>{ERA_MIN}</span><span>{ERA_MAX}</span>
+					</div>
+				</div>
+				{#if eraFrom === eraTo}
+					<div class="era-hint">Año exacto: <strong>{eraFrom}</strong></div>
+				{:else if eraActive}
+					<div class="era-hint">{eraTo - eraFrom} año{eraTo - eraFrom !== 1 ? 's' : ''} seleccionados</div>
+				{/if}
 			</div>
 			<div class="fgroup">
 				<h4>Runas</h4>
@@ -124,7 +186,8 @@
 								types = [];
 								schools = [];
 								runes = [];
-								eras = [];
+								eraA = ERA_MIN;
+								eraB = ERA_MAX;
 							}}
 						>
 							limpiar
