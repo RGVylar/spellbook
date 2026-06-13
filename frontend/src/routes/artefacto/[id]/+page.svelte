@@ -127,6 +127,22 @@
 		}
 	}
 
+	// ── Añadir a hechizo ─────────────────────────────────────
+	let spellPickerOpen = $state(false);
+	let addingToSpell = $state('');
+
+	async function addToSpell(spellId: string) {
+		if (!art || addingToSpell) return;
+		addingToSpell = spellId;
+		try {
+			await api.post(`/spells/${spellId}/tracks/${art.id}`);
+			await catalog.load(true);
+			spellPickerOpen = false;
+		} catch { /* silencioso */ } finally {
+			addingToSpell = '';
+		}
+	}
+
 	// ── Visitas ──────────────────────────────────────────────
 	$effect(() => {
 		if (art?.status === 'sellado') {
@@ -416,6 +432,39 @@
 
 			<!-- Columna lateral -->
 			<aside style="position: sticky; top: 84px">
+				{#if playable && auth.user}
+					<div style="position: relative; margin-bottom: 10px">
+						<button
+							class="btn cursor-star"
+							style="width: 100%; box-sizing: border-box"
+							onclick={() => (spellPickerOpen = !spellPickerOpen)}
+						>
+							<Icon name="spell" s={15} /> Añadir a hechizo
+						</button>
+						{#if spellPickerOpen}
+							<div class="glass" style="position: absolute; top: calc(100% + 6px); left: 0; right: 0; border-radius: var(--r-md); padding: 6px; z-index: 20">
+								{#if catalog.spells.length === 0}
+									<p class="muted" style="font-size: 12px; padding: 8px; margin: 0">No hay hechizos creados.</p>
+								{/if}
+								{#each catalog.spells as s (s.id)}
+									<button
+										class="btn ghost cursor-star"
+										style="width: 100%; margin-bottom: 4px; justify-content: flex-start; gap: 8px; font-size: 12.5px; {s.tracks.includes(art.id) ? 'opacity:.45; pointer-events:none' : ''}"
+										onclick={() => addToSpell(s.id)}
+										disabled={!!addingToSpell || s.tracks.includes(art.id)}
+									>
+										<span style="color: {s.hue}">{s.glyph}</span>
+										{s.name}
+										{#if s.tracks.includes(art.id)}<Icon name="check" s={13} />{/if}
+									</button>
+								{/each}
+								<button class="btn ghost cursor-star" style="width: 100%; font-size: 11.5px; color: var(--muted)" onclick={() => (spellPickerOpen = false)}>
+									Cancelar
+								</button>
+							</div>
+						{/if}
+					</div>
+				{/if}
 				{#if auth.isArchimago}
 					<a
 						class="btn cursor-star"

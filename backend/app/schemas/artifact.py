@@ -87,6 +87,20 @@ class SpellOut(CamelModel):
     tracks: list[str]
 
 
+class SpellCreate(CamelModel):
+    name: str = Field(min_length=1, max_length=120)
+    glyph: str = Field(default="♪", max_length=8)
+    hue: str = Field(default="#c9a84c", max_length=16)
+    desc: str = ""
+
+
+class SpellUpdate(CamelModel):
+    name: str | None = None
+    glyph: str | None = None
+    hue: str | None = None
+    desc: str | None = None
+
+
 class SpellDetail(CamelModel):
     spell: SpellOut
     tracks: list[ArtifactOut]
