@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.ingest import media_path_for
 from app.models.artifact import STATUS_SELLADO, Artifact, School
+from app.models.user import User
 from app.schemas.artifact import StatsOut
 
 router = APIRouter(tags=["misc"])
@@ -24,12 +25,14 @@ BASE_RUNES = [
 def stats(db: Session = Depends(get_db)) -> StatsOut:
     arts = db.scalars(select(Artifact).where(Artifact.status == STATUS_SELLADO)).all()
     schools = db.scalar(select(func.count()).select_from(School)) or 0
+    mages = db.scalar(select(func.count()).select_from(User)) or 0
     since = min((a.era for a in arts), default=2020)
     return StatsOut(
         artifacts=len(arts),
         connections=sum(len(a.links or []) for a in arts),
         schools=schools,
         since=since,
+        mages=mages,
     )
 
 

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Artifact } from '$lib/types';
 
-	let { art, big = false }: { art: Artifact; big?: boolean } = $props();
+	let { art, big = false, compact = false }: { art: Artifact; big?: boolean; compact?: boolean } = $props();
 
 	function ytThumbnail(url: string): string | null {
 		const m = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
@@ -15,7 +15,7 @@
 	);
 </script>
 
-<div class="plate" class:big>
+<div class="plate" class:big class:compact>
 	{#if thumbSrc}
 		<img class="plate-bg" src={thumbSrc} alt="" aria-hidden="true" />
 	{:else if art.media === 'text' && art.desc}

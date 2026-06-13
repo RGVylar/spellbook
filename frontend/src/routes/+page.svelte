@@ -73,6 +73,10 @@
 			<div class="n">{romanize(stats?.since ?? 2020)}</div>
 			<div class="l">desde el primer sello</div>
 		</div>
+		<div class="stat" style="text-align: center">
+			<div class="n">{romanize(stats?.mages ?? 0)}</div>
+			<div class="l">magos inscritos</div>
+		</div>
 	</div>
 
 	<!-- Accesos rápidos -->

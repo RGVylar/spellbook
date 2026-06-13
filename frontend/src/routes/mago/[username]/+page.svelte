@@ -2,8 +2,7 @@
 	import { page } from '$app/state';
 	import { api } from '$lib/api';
 	import Icon from '$lib/components/Icon.svelte';
-	import SectionHead from '$lib/components/SectionHead.svelte';
-	import SpellCard from '$lib/components/SpellCard.svelte';
+	import MiniCard from '$lib/components/MiniCard.svelte';
 	import { auth } from '$lib/stores/auth.svelte';
 	import { moderation } from '$lib/stores/moderation.svelte';
 	import type { Invite, UserProfile } from '$lib/types';
@@ -73,7 +72,7 @@
 
 <svelte:head><title>{profile ? `${profile.username} · SPELLBOOK` : 'Mago · SPELLBOOK'}</title></svelte:head>
 
-<div class="canvas" style="max-width: 900px">
+<div class="canvas">
 	{#if loading}
 		<p class="t-arcane" style="font-size: 22px; color: var(--gold); text-align: center; padding: 80px 0">
 			El oráculo medita…
@@ -85,90 +84,226 @@
 			<p class="muted">Ese nombre no figura en el registro del grimorio.</p>
 		</div>
 	{:else if profile}
-		<!-- Cabecera del perfil -->
-		<div class="glass" style="border-radius: var(--r-xl); padding: 32px; margin-bottom: 28px; display: flex; align-items: center; gap: 24px; flex-wrap: wrap">
-			<div style="width: 72px; height: 72px; border-radius: 50%; display: grid; place-items: center; font-family: var(--font-arcane); font-size: 34px; color: var(--gold-bright); background: rgba(201,168,76,.1); border: 1px solid var(--glass-border-hi); flex: 0 0 auto">
-				{profile.glyph}
-			</div>
-			<div style="flex: 1; min-width: 0">
-				<h1 style="font-size: 26px; font-weight: 700; margin: 0 0 4px; color: var(--parchment)">{profile.username}</h1>
-				<div class="row gap-2" style="flex-wrap: wrap; align-items: center">
-					<span class="eyebrow" class:archimago={profile.role === 'archimago'}>{ROLE_LABEL[profile.role]}</span>
-					<span class="dot"></span>
-					<span class="muted" style="font-size: 12.5px">inscrito {arcaneTime(profile.createdAt)}</span>
-					<span class="dot"></span>
-					<span class="muted" style="font-size: 12.5px">{profile.artifactCount} artefacto{profile.artifactCount !== 1 ? 's' : ''}</span>
-					{#if profile.adeptCount > 0}
-						<span class="dot"></span>
-						<span class="muted" style="font-size: 12.5px">{profile.adeptCount} adepto{profile.adeptCount !== 1 ? 's' : ''}</span>
+		<div class="profile-layout">
+			<!-- Sidebar -->
+			<aside class="profile-sidebar">
+				<!-- Identidad -->
+				<div class="glass sidebar-card">
+					<div class="avatar">{profile.glyph}</div>
+					<h1 class="profile-name">{profile.username}</h1>
+					<div class="eyebrow" class:archimago={profile.role === 'archimago'} style="margin-bottom: 18px">
+						{ROLE_LABEL[profile.role]}
+					</div>
+
+					<div class="profile-stats">
+						<div class="pstat">
+							<span class="pstat-n">{profile.artifactCount}</span>
+							<span class="pstat-l">artefacto{profile.artifactCount !== 1 ? 's' : ''}</span>
+						</div>
+						{#if profile.adeptCount > 0}
+							<div class="pstat">
+								<span class="pstat-n">{profile.adeptCount}</span>
+								<span class="pstat-l">adepto{profile.adeptCount !== 1 ? 's' : ''}</span>
+							</div>
+						{/if}
+					</div>
+					<div class="muted" style="font-size: 12px; margin-top: 10px">inscrito {arcaneTime(profile.createdAt)}</div>
+
+					{#if isOwn}
+						<div class="sidebar-actions">
+							<a class="btn cursor-star" href="/auth" style="text-decoration: none; font-size: 12.5px; justify-content: center">
+								<Icon name="wizard" s={14} /> Cuenta
+							</a>
+							<button class="btn cursor-star" style="font-size: 12.5px; border-color: var(--ember); color: var(--ember); justify-content: center" onclick={logout}>
+								<Icon name="logout" s={14} /> Salir
+							</button>
+						</div>
 					{/if}
 				</div>
-			</div>
-			{#if isOwn}
-				<div class="row gap-2">
-					<a class="btn cursor-star" href="/auth" style="font-size: 12px; padding: 7px 14px; text-decoration: none">
-						<Icon name="wizard" s={14} /> Cuenta
-					</a>
-					<button class="btn cursor-star" style="font-size: 12px; padding: 7px 14px; border-color: var(--ember); color: var(--ember)" onclick={logout}>
-						<Icon name="logout" s={14} /> Salir
-					</button>
-				</div>
-			{/if}
-		</div>
 
-		<!-- Invitaciones (solo perfil propio, solo magos+) -->
-		{#if isOwn && auth.isModerator}
-			<div class="glass" style="border-radius: var(--r-xl); padding: 24px 28px; margin-bottom: 28px">
-				<div class="row" style="justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 10px">
-					<h3 class="t-arcane" style="font-size: 20px; margin: 0">Invitaciones forjadas</h3>
-					<button class="btn cursor-star" onclick={createInvite}>
-						<Icon name="key" s={15} /> Forjar nueva
-						{#if auth.user?.role !== 'archimago'} ({auth.user?.invitesLeft ?? 0}){/if}
-					</button>
-				</div>
-				{#if inviteError}<p style="color: var(--ember); font-size: 13px; margin: 0 0 10px">{inviteError}</p>{/if}
-				{#if invites.length === 0}
-					<p class="muted" style="font-size: 12.5px; margin: 0">Aún no has forjado ninguna invitación.</p>
-				{/if}
-				{#each invites as inv (inv.code)}
-					<div class="row" style="justify-content: space-between; padding: 9px 0; border-bottom: 1px dashed rgba(201,168,76,.12); gap: 12px; flex-wrap: wrap">
-						<code style="font-size: 13px; color: {inv.usedBy ? 'var(--faint)' : 'var(--gold-bright)'}">{inv.code}</code>
-						<div class="row gap-3" style="align-items: center">
-							<span class="muted" style="font-size: 11.5px">
-								{inv.usedBy ? `consumida por ${inv.usedBy}` : 'sin consumir'}
-							</span>
-							{#if !inv.usedBy}
-								<button
-									class="btn cursor-star"
-									style="font-size: 11px; padding: 4px 10px; border-color: {copied === inv.code ? 'var(--gold)' : 'rgba(201,168,76,.3)'}; color: {copied === inv.code ? 'var(--gold-bright)' : 'var(--muted)'}"
-									onclick={() => shareInvite(inv.code)}
-								>
-									<Icon name={copied === inv.code ? 'check' : 'link'} s={12} />
-									{copied === inv.code ? 'Copiado' : 'Compartir'}
-								</button>
-							{/if}
+				<!-- Invitaciones (solo perfil propio + moderador) -->
+				{#if isOwn && auth.isModerator}
+					<div class="glass sidebar-card" style="padding-top: 20px">
+						<div class="row" style="justify-content: space-between; align-items: center; margin-bottom: 14px">
+							<span class="t-arcane" style="font-size: 16px">Invitaciones</span>
+							<button class="btn cursor-star" style="font-size: 11px; padding: 5px 10px" onclick={createInvite}>
+								<Icon name="key" s={13} /> Forjar
+								{#if auth.user?.role !== 'archimago'} ({auth.user?.invitesLeft ?? 0}){/if}
+							</button>
 						</div>
+						{#if inviteError}<p style="color: var(--ember); font-size: 12px; margin: 0 0 8px">{inviteError}</p>{/if}
+						{#if invites.length === 0}
+							<p class="muted" style="font-size: 12px; margin: 0">Sin invitaciones forjadas.</p>
+						{/if}
+						{#each invites as inv (inv.code)}
+							<div style="padding: 8px 0; border-bottom: 1px dashed rgba(201,168,76,.1)">
+								<div class="row" style="justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 3px">
+									<code style="font-size: 12px; color: {inv.usedBy ? 'var(--faint)' : 'var(--gold-bright)'}; overflow: hidden; text-overflow: ellipsis">{inv.code}</code>
+									{#if !inv.usedBy}
+										<button
+											class="btn cursor-star"
+											style="font-size: 10px; padding: 3px 8px; flex-shrink: 0; border-color: {copied === inv.code ? 'var(--gold)' : 'rgba(201,168,76,.3)'}; color: {copied === inv.code ? 'var(--gold-bright)' : 'var(--muted)'}"
+											onclick={() => shareInvite(inv.code)}
+										>
+											<Icon name={copied === inv.code ? 'check' : 'link'} s={11} />
+											{copied === inv.code ? 'OK' : 'Link'}
+										</button>
+									{/if}
+								</div>
+								<div class="muted" style="font-size: 10.5px">
+									{inv.usedBy ? `→ ${inv.usedBy}` : 'sin consumir'}
+								</div>
+							</div>
+						{/each}
 					</div>
-				{/each}
-			</div>
-		{/if}
+				{/if}
+			</aside>
 
-		<!-- Contribuciones -->
-		<SectionHead
-			eyebrow="Sus obras en el grimorio"
-			title="Artefactos sellados"
-			sub={profile.artifacts.length === 0 ? 'Este mago aún no ha inscrito conocimiento.' : ''}
-		/>
-		{#if profile.artifacts.length > 0}
-			<div class="card-grid" style="margin-top: 20px">
-				{#each profile.artifacts as art (art.id)}
-					<SpellCard {art} />
-				{/each}
-			</div>
-		{:else}
-			<div class="glass" style="border-radius: var(--r-lg); padding: 32px; text-align: center; color: var(--muted); margin-top: 16px">
-				El pergamino está en blanco.
-			</div>
-		{/if}
+			<!-- Artefactos -->
+			<main class="profile-main">
+				<div class="eyebrow" style="margin-bottom: 14px">Sus obras en el grimorio</div>
+				{#if profile.artifacts.length > 0}
+					<div class="mini-grid">
+						{#each profile.artifacts as art (art.id)}
+							<MiniCard {art} />
+						{/each}
+					</div>
+				{:else}
+					<div class="glass" style="border-radius: var(--r-lg); padding: 40px; text-align: center; color: var(--muted)">
+						El pergamino está en blanco.
+					</div>
+				{/if}
+			</main>
+		</div>
 	{/if}
 </div>
+
+<style>
+	.profile-layout {
+		display: grid;
+		grid-template-columns: 240px 1fr;
+		gap: 24px;
+		align-items: start;
+	}
+
+	.profile-sidebar {
+		display: flex;
+		flex-direction: column;
+		gap: 16px;
+		position: sticky;
+		top: 24px;
+	}
+
+	.sidebar-card {
+		border-radius: var(--r-xl);
+		padding: 28px 22px 22px;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+	}
+
+	.avatar {
+		width: 80px;
+		height: 80px;
+		border-radius: 50%;
+		display: grid;
+		place-items: center;
+		font-family: var(--font-arcane);
+		font-size: 38px;
+		color: var(--gold-bright);
+		background: rgba(201, 168, 76, 0.08);
+		border: 2px solid rgba(201, 168, 76, 0.4);
+		box-shadow: 0 0 24px rgba(201, 168, 76, 0.15);
+		margin-bottom: 14px;
+	}
+
+	.profile-name {
+		font-family: var(--font-display);
+		font-size: 20px;
+		font-weight: 700;
+		color: var(--parchment);
+		margin: 0 0 6px;
+		letter-spacing: 0.02em;
+	}
+
+	.profile-stats {
+		display: flex;
+		gap: 18px;
+		justify-content: center;
+		margin-top: 16px;
+		padding-top: 16px;
+		border-top: 1px dashed rgba(201, 168, 76, 0.15);
+		width: 100%;
+	}
+
+	.pstat {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 2px;
+	}
+
+	.pstat-n {
+		font-family: var(--font-display);
+		font-size: 22px;
+		font-weight: 700;
+		color: var(--gold-bright);
+		line-height: 1;
+	}
+
+	.pstat-l {
+		font-size: 10px;
+		color: var(--muted);
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+	}
+
+	.sidebar-actions {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		width: 100%;
+		margin-top: 20px;
+		padding-top: 16px;
+		border-top: 1px dashed rgba(201, 168, 76, 0.15);
+	}
+
+	.profile-main {
+		min-width: 0;
+	}
+
+	.mini-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+		gap: 14px;
+	}
+
+	@media (max-width: 720px) {
+		.profile-layout {
+			grid-template-columns: 1fr;
+		}
+		.profile-sidebar {
+			position: static;
+		}
+		.sidebar-card {
+			flex-direction: row;
+			text-align: left;
+			align-items: flex-start;
+			gap: 16px;
+			flex-wrap: wrap;
+		}
+		.avatar {
+			width: 60px;
+			height: 60px;
+			font-size: 28px;
+			margin-bottom: 0;
+			flex-shrink: 0;
+		}
+		.profile-stats {
+			justify-content: flex-start;
+			margin-top: 10px;
+			padding-top: 10px;
+		}
+	}
+</style>

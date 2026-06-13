@@ -7,7 +7,7 @@
 	import BottomNav from '$lib/components/BottomNav.svelte';
 	import NavRail from '$lib/components/NavRail.svelte';
 	import OracleSearch from '$lib/components/OracleSearch.svelte';
-	import Topbar from '$lib/components/Topbar.svelte';
+	import Topbar from '$lib/components/TopBar.svelte';
 	import { auth } from '$lib/stores/auth.svelte';
 	import { catalog } from '$lib/stores/catalog.svelte';
 	import { moderation } from '$lib/stores/moderation.svelte';

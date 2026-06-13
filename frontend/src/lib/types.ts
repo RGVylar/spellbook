@@ -92,6 +92,7 @@ export interface Stats {
 	connections: number;
 	schools: number;
 	since: number;
+	mages: number;
 }
 
 export interface ArtifactDraft {

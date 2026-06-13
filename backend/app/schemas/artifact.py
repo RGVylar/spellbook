@@ -124,3 +124,4 @@ class StatsOut(CamelModel):
     connections: int
     schools: int
     since: int
+    mages: int

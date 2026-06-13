@@ -104,6 +104,8 @@
 .plate .seal-mark { position: absolute; bottom: 8px; right: 10px; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--gold-deep); font-family: var(--font-ui); }
 .plate.big { aspect-ratio: 16/9; }
 .plate.big .glyph { font-size: 96px; }
+.plate.compact { aspect-ratio: 4/3; }
+.plate.compact .glyph { font-size: 40px; }
 
 .card-body { padding: 14px 16px 16px; }
 .card-title { font-family: var(--font-ui); font-weight: 650; font-size: 15.5px; letter-spacing: .01em; color: var(--parchment); margin: 0 0 6px; line-height: 1.25; }
