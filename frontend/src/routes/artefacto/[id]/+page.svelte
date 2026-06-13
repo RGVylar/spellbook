@@ -421,7 +421,7 @@
 							<div class="av">{n.glyph}</div>
 							<div style="flex: 1">
 								<div class="row gap-2">
-									<span class="nwho">{n.who}</span><span class="nwhen">· {arcaneTime(n.when)}</span>
+									<a class="nwho cursor-star" href="/mago/{n.who}" style="text-decoration: none; color: inherit">{n.who}</a><span class="nwhen">· {arcaneTime(n.when)}</span>
 								</div>
 								<div class="ntext">{@html arcaneHtml(n.text)}</div>
 							</div>
@@ -506,7 +506,7 @@
 				{/if}
 				<div class="glass" style="border-radius: var(--r-lg); padding: 20px; margin-bottom: 22px">
 					<div class="eyebrow" style="margin-bottom: 14px">Inscripción</div>
-					{#each [['Época', String(art.era)], ['Escuela', school?.name ?? art.school], ['Naturaleza', TYPE_META[art.type]?.label ?? art.type], ['Sellado por', art.sealedBy]] as [k, v] (k + v)}
+					{#each [['Época', String(art.era)], ['Escuela', school?.name ?? art.school], ['Naturaleza', TYPE_META[art.type]?.label ?? art.type]] as [k, v] (k + v)}
 						<div
 							class="row"
 							style="justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed rgba(201,168,76,.12)"
@@ -515,6 +515,10 @@
 							<span style="font-size: 13.5px; font-weight: 600; color: var(--parchment)">{@html arcaneHtml(v)}</span>
 						</div>
 					{/each}
+					<div class="row" style="justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed rgba(201,168,76,.12)">
+						<span class="muted" style="font-size: 12.5px">Sellado por</span>
+						<a href="/mago/{art.sealedBy}" class="cursor-star" style="font-size: 13.5px; font-weight: 600; color: var(--parchment); text-decoration: none">{art.sealedBy}</a>
+					</div>
 					<div style="padding-top: 14px">
 						<span class="muted" style="font-size: 12.5px; display: block; margin-bottom: 8px">Runas</span>
 						<RuneCloud runes={art.runes} />
