@@ -94,6 +94,23 @@ def pending_count(
     return {"count": n}
 
 
+@router.get("/needs-ingest", response_model=list[ArtifactOut])
+def needs_ingest(
+    db: Session = Depends(get_db), user: User = Depends(get_moderator_user)
+) -> list:
+    rows = db.scalars(
+        select(Artifact)
+        .where(
+            Artifact.status == STATUS_SELLADO,
+            Artifact.media != "text",
+            Artifact.source_url.isnot(None),
+            Artifact.media_url.is_(None),
+        )
+        .order_by(Artifact.created_at.desc())
+    ).all()
+    return [ArtifactOut.model_validate({**a.__dict__, "user_reaction": None, "note_count": 0}) for a in rows]
+
+
 @router.get("/{artifact_id}", response_model=ArtifactOut)
 def get_artifact(
     artifact_id: str,

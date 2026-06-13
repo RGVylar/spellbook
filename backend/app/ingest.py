@@ -109,6 +109,8 @@ def _run_ytdlp(url: str, artifact_id: str) -> tuple[str, str | None]:
         'retries': 3,
         'fragment_retries': 3,
     }
+    if settings.youtube_cookies and Path(settings.youtube_cookies).is_file():
+        ydl_opts['cookiefile'] = settings.youtube_cookies
     thumbnail_url = None
     with _DL_SEMAPHORE:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:

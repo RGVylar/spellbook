@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     telegram_chat_id: str | None = None
     # Archivos preservados (yt-dlp) — {artifact_id}.{ext}
     media_dir: str = str(Path(__file__).resolve().parents[2] / "media")
+    # Cookies de YouTube para vídeos con restricción de edad (formato Netscape/cookies.txt)
+    youtube_cookies: str | None = None
     # Ascenso aprendiz → mago
     mago_days: int = 14
     mago_min_approved: int = 1

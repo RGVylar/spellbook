@@ -86,7 +86,10 @@
 	function startIngestPoll(artifactId: string) {
 		if (ingestPollTimer) return;
 		ingesting = true;
+		let attempts = 0;
+		const MAX_ATTEMPTS = 30; // 2 minutos
 		ingestPollTimer = setInterval(async () => {
+			attempts++;
 			try {
 				const s = await api.get<{ mediaUrl: string | null; thumbnailUrl: string | null; fileReady: boolean }>(
 					`/artifacts/${artifactId}/ingest-status`
@@ -98,16 +101,18 @@
 					}
 					ingesting = false;
 					if (ingestPollTimer) { clearInterval(ingestPollTimer); ingestPollTimer = null; }
+					return;
 				}
 			} catch { /* sigue intentando */ }
+			if (attempts >= MAX_ATTEMPTS) {
+				ingesting = false;
+				if (ingestPollTimer) { clearInterval(ingestPollTimer); ingestPollTimer = null; }
+			}
 		}, 4000);
 	}
 
 	$effect(() => {
-		// Arranca polling si el artefacto necesita preservación pero no tiene archivo aún
-		if (art && art.media !== 'text' && !art.mediaUrl) {
-			startIngestPoll(art.id);
-		}
+		// Limpiar poll al salir de la página
 		return () => {
 			if (ingestPollTimer) { clearInterval(ingestPollTimer); ingestPollTimer = null; }
 			ingesting = false;
@@ -481,7 +486,7 @@
 							disabled={ingestRetrying || ingesting}
 						>
 							<Icon name="upload" s={15} />
-							{ingesting ? 'Descargando…' : ingestRetrying ? 'Relanzando…' : 'Redescargar archivo'}
+							{ingesting ? 'Descargando…' : ingestRetrying ? 'Relanzando…' : art?.mediaUrl ? 'Redescargar archivo' : 'Descargar archivo'}
 						</button>
 					{/if}
 					{#if confirmDelete}
