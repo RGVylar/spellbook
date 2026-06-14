@@ -29,11 +29,11 @@
 	function toggleCacofonia() {
 		if (!cacofoniaOnly) {
 			savedQueue = player.queue.slice();
-			const source = player.queue.length > 0 ? player.queue : catalog.playable;
+			const source = player.queue.length > 0 ? player.queue : catalog.playablePreserved;
 			player.queue = source.filter((a) => a.school === 'cacofonia');
 			cacofoniaOnly = true;
 		} else {
-			player.queue = savedQueue.length > 0 ? savedQueue : catalog.playable;
+			player.queue = savedQueue.length > 0 ? savedQueue : catalog.playablePreserved;
 			savedQueue = [];
 			cacofoniaOnly = false;
 		}
@@ -62,7 +62,7 @@
 	});
 
 	function step(dir: 1 | -1) {
-		if (player.queue.length === 0) player.queue = catalog.playable;
+		if (player.queue.length === 0) player.queue = catalog.playablePreserved;
 		player.step(dir);
 	}
 
@@ -128,6 +128,8 @@
 			onerror={() => {
 				player.playing = false;
 				unavailable = true;
+				// Auto-saltar al siguiente si hay cola (el artefacto no está preservado)
+				if (player.queue.length > 1) setTimeout(() => step(1), 800);
 			}}
 		></audio>
 		<div

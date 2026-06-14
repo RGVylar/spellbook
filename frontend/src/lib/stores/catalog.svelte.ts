@@ -41,6 +41,15 @@ class CatalogStore {
 	get playable(): Artifact[] {
 		return this.artifacts.filter((a) => a.media === 'audio' || a.media === 'video');
 	}
+
+	// Igual que playable pero excluyendo los sin preservar (tienen sourceUrl pero no mediaUrl)
+	get playablePreserved(): Artifact[] {
+		return this.artifacts.filter(
+			(a) =>
+				(a.media === 'audio' || a.media === 'video') &&
+				!(a.sourceUrl && !a.mediaUrl)
+		);
+	}
 }
 
 export const catalog = new CatalogStore();
