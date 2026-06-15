@@ -19,10 +19,12 @@
 		return `M ${a.x} ${a.y} L ${b.x} ${b.y} L ${c.x} ${c.y} Z`;
 	}
 
-	// Puntos de datos normalizados
-	const sr = $derived(stats.resonancia / 100);
-	const se = $derived(stats.estirpe / 100);
-	const st = $derived(stats.estudio / 100);
+	// Normaliza cada eje contra el máximo de los 3 para que la forma sea legible
+	// independientemente de la escala absoluta. Los valores reales se muestran en etiquetas.
+	const maxVal = $derived(Math.max(stats.resonancia, stats.estudio, stats.estirpe, 1));
+	const sr = $derived(stats.resonancia / maxVal);
+	const se = $derived(stats.estirpe / maxVal);
+	const st = $derived(stats.estudio / maxVal);
 
 	const poder = $derived(Math.round(stats.resonancia + stats.estudio + stats.estirpe));
 
