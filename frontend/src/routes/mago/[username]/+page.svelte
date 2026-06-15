@@ -140,42 +140,6 @@
 					<ArcaneRadar stats={profile.arcaneStats} />
 				</div>
 
-				<!-- Invitaciones (solo perfil propio + moderador) -->
-				{#if isOwn && auth.isModerator}
-					<div class="glass sidebar-card" style="padding-top: 20px">
-						<div class="row" style="justify-content: space-between; align-items: center; margin-bottom: 14px">
-							<span class="t-arcane" style="font-size: 16px">Invitaciones</span>
-							<button class="btn cursor-star" style="font-size: 11px; padding: 5px 10px" onclick={createInvite}>
-								<Icon name="key" s={13} /> Forjar
-								{#if auth.user?.role !== 'archimago'} ({auth.user?.invitesLeft ?? 0}){/if}
-							</button>
-						</div>
-						{#if inviteError}<p style="color: var(--ember); font-size: 12px; margin: 0 0 8px">{inviteError}</p>{/if}
-						{#if invites.length === 0}
-							<p class="muted" style="font-size: 12px; margin: 0">Sin invitaciones forjadas.</p>
-						{/if}
-						{#each invites as inv (inv.code)}
-							<div style="padding: 8px 0; border-bottom: 1px dashed rgba(201,168,76,.1)">
-								<div class="row" style="justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 3px">
-									<code style="font-size: 12px; color: {inv.usedBy ? 'var(--faint)' : 'var(--gold-bright)'}; overflow: hidden; text-overflow: ellipsis">{inv.code}</code>
-									{#if !inv.usedBy}
-										<button
-											class="btn cursor-star"
-											style="font-size: 10px; padding: 3px 8px; flex-shrink: 0; border-color: {copied === inv.code ? 'var(--gold)' : 'rgba(201,168,76,.3)'}; color: {copied === inv.code ? 'var(--gold-bright)' : 'var(--muted)'}"
-											onclick={() => shareInvite(inv.code)}
-										>
-											<Icon name={copied === inv.code ? 'check' : 'link'} s={11} />
-											{copied === inv.code ? 'OK' : 'Link'}
-										</button>
-									{/if}
-								</div>
-								<div class="muted" style="font-size: 10.5px">
-									{inv.usedBy ? `→ ${inv.usedBy}` : 'sin consumir'}
-								</div>
-							</div>
-						{/each}
-					</div>
-				{/if}
 			</aside>
 
 			<!-- Artefactos (centro) -->
@@ -197,6 +161,43 @@
 			<!-- Estirpe (derecha) -->
 			{#if lineage}
 				<aside class="profile-lineage">
+					<!-- Invitaciones (solo perfil propio + moderador) -->
+					{#if isOwn && auth.isModerator}
+						<div class="glass lineage-card" style="margin-bottom: 16px">
+							<div class="row" style="justify-content: space-between; align-items: center; margin-bottom: 14px">
+								<span class="t-arcane" style="font-size: 16px">Invitaciones</span>
+								<button class="btn cursor-star" style="font-size: 11px; padding: 5px 10px" onclick={createInvite}>
+									<Icon name="key" s={13} /> Forjar
+									{#if auth.user?.role !== 'archimago'} ({auth.user?.invitesLeft ?? 0}){/if}
+								</button>
+							</div>
+							{#if inviteError}<p style="color: var(--ember); font-size: 12px; margin: 0 0 8px">{inviteError}</p>{/if}
+							{#if invites.length === 0}
+								<p class="muted" style="font-size: 12px; margin: 0">Sin invitaciones forjadas.</p>
+							{/if}
+							{#each invites as inv (inv.code)}
+								<div style="padding: 8px 0; border-bottom: 1px dashed rgba(201,168,76,.1)">
+									<div class="row" style="justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 3px">
+										<code style="font-size: 12px; color: {inv.usedBy ? 'var(--faint)' : 'var(--gold-bright)'}; overflow: hidden; text-overflow: ellipsis">{inv.code}</code>
+										{#if !inv.usedBy}
+											<button
+												class="btn cursor-star"
+												style="font-size: 10px; padding: 3px 8px; flex-shrink: 0; border-color: {copied === inv.code ? 'var(--gold)' : 'rgba(201,168,76,.3)'}; color: {copied === inv.code ? 'var(--gold-bright)' : 'var(--muted)'}"
+												onclick={() => shareInvite(inv.code)}
+											>
+												<Icon name={copied === inv.code ? 'check' : 'link'} s={11} />
+												{copied === inv.code ? 'OK' : 'Link'}
+											</button>
+										{/if}
+									</div>
+									<div class="muted" style="font-size: 10.5px">
+										{inv.usedBy ? `→ ${inv.usedBy}` : 'sin consumir'}
+									</div>
+								</div>
+							{/each}
+						</div>
+					{/if}
+
 					<div class="eyebrow" style="margin-bottom: 14px">Árbol de estirpe</div>
 					<div class="glass" style="border-radius: var(--r-lg); padding: 20px">
 						<LineageTree root={lineage} />
@@ -218,6 +219,11 @@
 	.profile-lineage {
 		position: sticky;
 		top: 24px;
+	}
+
+	.lineage-card {
+		border-radius: var(--r-xl);
+		padding: 18px 18px 14px;
 	}
 
 	.profile-sidebar {

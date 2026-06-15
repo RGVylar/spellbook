@@ -24,6 +24,8 @@
 	const se = $derived(stats.estirpe / 100);
 	const st = $derived(stats.estudio / 100);
 
+	const poder = $derived(Math.round(stats.resonancia + stats.estudio + stats.estirpe));
+
 	const dataPath = $derived(() => {
 		const r = vertex(0, sr);
 		const e = vertex(1, se);
@@ -40,7 +42,7 @@
 </script>
 
 <div class="radar-wrap">
-	<svg viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg" aria-label="Perfil arcano">
+	<svg viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg" aria-label="Perfil arcano">
 		<defs>
 			<filter id="glow-gold">
 				<feGaussianBlur stdDeviation="2.5" result="blur" />
@@ -117,6 +119,13 @@
 				>{Math.round(val)}</text>
 			{/if}
 		{/each}
+
+		<!-- Separador -->
+		<line x1="20" y1="212" x2="180" y2="212" stroke="rgba(201,168,76,0.15)" stroke-width="0.8" />
+
+		<!-- Poder Total -->
+		<text x="100" y="225" text-anchor="middle" font-family="var(--font-ui)" font-size="8" font-weight="600" letter-spacing="0.18em" fill="var(--muted)">PODER TOTAL</text>
+		<text x="100" y="238" text-anchor="middle" font-family="var(--font-display)" font-size="16" font-weight="700" fill="var(--gold-bright)" filter="url(#glow-gold)">{poder}</text>
 	</svg>
 </div>
 
