@@ -1,5 +1,3 @@
-import math
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func, select, text
 from sqlalchemy.orm import Session
@@ -39,28 +37,21 @@ def _compute_arcane_title(user: User, db: Session) -> str | None:
 
 
 def _compute_arcane_stats(user: User, db: Session) -> ArcaneStats:
-    # Resonancia: suma de views de todos los artefactos sellados por este usuario.
-    # Escala logarítmica: 1000 views ≈ 100 puntos.
-    total_views = db.scalar(
+    # Resonancia: total de views acumuladas en los artefactos sellados por este usuario.
+    resonancia = float(db.scalar(
         select(func.coalesce(func.sum(Artifact.views), 0)).where(
             Artifact.created_by_id == user.id,
             Artifact.status == STATUS_SELLADO,
         )
-    ) or 0
-    resonancia = min(math.log10(total_views + 1) / math.log10(1001) * 100, 100.0)
+    ) or 0)
 
-    # Estudio: % de artefactos sellados en el grimorio que ha visto este usuario.
-    total_artifacts = db.scalar(
-        select(func.count(Artifact.id)).where(Artifact.status == STATUS_SELLADO)
-    ) or 0
-    studied = db.scalar(
+    # Estudio: número absoluto de artefactos del grimorio que ha estudiado.
+    estudio = float(db.scalar(
         select(func.count(ArtifactStudied.id)).where(ArtifactStudied.user_id == user.id)
-    ) or 0
-    estudio = (studied / total_artifacts * 100) if total_artifacts > 0 else 0.0
+    ) or 0)
 
-    # Estirpe: tamaño del árbol de invitados recursivo (CTE).
-    # 50 descendientes ≈ 100 puntos (escala logarítmica suave).
-    result = db.execute(
+    # Estirpe: número total de descendientes en el árbol de invitaciones (recursivo).
+    estirpe = float(db.execute(
         text("""
             WITH RECURSIVE tree(id) AS (
                 SELECT id FROM users WHERE invited_by_id = :uid
@@ -70,9 +61,7 @@ def _compute_arcane_stats(user: User, db: Session) -> ArcaneStats:
             SELECT COUNT(*) FROM tree
         """),
         {"uid": user.id},
-    ).scalar()
-    lineage_size = result or 0
-    estirpe = min(math.log10(lineage_size + 1) / math.log10(51) * 100, 100.0)
+    ).scalar() or 0)
 
     return ArcaneStats(resonancia=resonancia, estudio=estudio, estirpe=estirpe)
 
