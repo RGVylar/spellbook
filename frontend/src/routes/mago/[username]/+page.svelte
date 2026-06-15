@@ -178,34 +178,31 @@
 				{/if}
 			</aside>
 
-			<!-- Columna principal -->
+			<!-- Artefactos (centro) -->
 			<main class="profile-main">
-				<!-- Artefactos -->
-				<section>
-					<div class="eyebrow" style="margin-bottom: 14px">Sus obras en el grimorio</div>
-					{#if profile.artifacts.length > 0}
-						<div class="mini-grid">
-							{#each profile.artifacts as art (art.id)}
-								<MiniCard {art} />
-							{/each}
-						</div>
-					{:else}
-						<div class="glass" style="border-radius: var(--r-lg); padding: 40px; text-align: center; color: var(--muted)">
-							El pergamino está en blanco.
-						</div>
-					{/if}
-				</section>
-
-				<!-- Árbol de estirpe -->
-				{#if lineage}
-					<section style="margin-top: 32px">
-						<div class="eyebrow" style="margin-bottom: 14px">Árbol de estirpe</div>
-						<div class="glass" style="border-radius: var(--r-lg); padding: 24px">
-							<LineageTree root={lineage} />
-						</div>
-					</section>
+				<div class="eyebrow" style="margin-bottom: 14px">Sus obras en el grimorio</div>
+				{#if profile.artifacts.length > 0}
+					<div class="mini-grid">
+						{#each profile.artifacts as art (art.id)}
+							<MiniCard {art} />
+						{/each}
+					</div>
+				{:else}
+					<div class="glass" style="border-radius: var(--r-lg); padding: 40px; text-align: center; color: var(--muted)">
+						El pergamino está en blanco.
+					</div>
 				{/if}
 			</main>
+
+			<!-- Estirpe (derecha) -->
+			{#if lineage}
+				<aside class="profile-lineage">
+					<div class="eyebrow" style="margin-bottom: 14px">Árbol de estirpe</div>
+					<div class="glass" style="border-radius: var(--r-lg); padding: 20px">
+						<LineageTree root={lineage} />
+					</div>
+				</aside>
+			{/if}
 		</div>
 	{/if}
 </div>
@@ -213,9 +210,14 @@
 <style>
 	.profile-layout {
 		display: grid;
-		grid-template-columns: 240px 1fr;
+		grid-template-columns: 240px 1fr 220px;
 		gap: 24px;
 		align-items: start;
+	}
+
+	.profile-lineage {
+		position: sticky;
+		top: 24px;
 	}
 
 	.profile-sidebar {
@@ -311,9 +313,22 @@
 		gap: 14px;
 	}
 
+	@media (max-width: 1024px) {
+		.profile-layout {
+			grid-template-columns: 240px 1fr;
+		}
+		.profile-lineage {
+			grid-column: 2;
+			position: static;
+		}
+	}
+
 	@media (max-width: 720px) {
 		.profile-layout {
 			grid-template-columns: 1fr;
+		}
+		.profile-lineage {
+			grid-column: 1;
 		}
 		.profile-sidebar {
 			position: static;
