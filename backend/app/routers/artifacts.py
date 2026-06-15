@@ -14,6 +14,7 @@ from app.models.artifact import (
     STATUS_SELLADO,
     Artifact,
     ArtifactReaction,
+    ArtifactStudied,
     Note,
     School,
 )
@@ -207,11 +208,24 @@ def update_artifact(
 
 
 @router.post("/{artifact_id}/view", status_code=status.HTTP_204_NO_CONTENT)
-def record_view(artifact_id: str, db: Session = Depends(get_db)) -> None:
-    """Incrementa el contador de visitas. Anónimo, fire-and-forget."""
+def record_view(
+    artifact_id: str,
+    db: Session = Depends(get_db),
+    user: User | None = Depends(get_optional_user),
+) -> None:
+    """Incrementa el contador de visitas. Si hay sesión, registra el artefacto como estudiado."""
     art = db.get(Artifact, artifact_id)
     if art and art.status == STATUS_SELLADO:
         art.views = (art.views or 0) + 1
+        if user is not None:
+            already = db.scalar(
+                select(ArtifactStudied).where(
+                    ArtifactStudied.artifact_id == artifact_id,
+                    ArtifactStudied.user_id == user.id,
+                )
+            )
+            if not already:
+                db.add(ArtifactStudied(artifact_id=artifact_id, user_id=user.id))
         db.commit()
 
 

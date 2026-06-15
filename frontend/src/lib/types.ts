@@ -47,6 +47,19 @@ export interface Spell {
 	tracks: string[];
 }
 
+export interface ArcaneStats {
+	resonancia: number;
+	estudio: number;
+	estirpe: number;
+}
+
+export interface LineageNode {
+	username: string;
+	role: Role;
+	glyph: string;
+	children: LineageNode[];
+}
+
 export interface UserProfile {
 	username: string;
 	role: Role;
@@ -55,6 +68,8 @@ export interface UserProfile {
 	artifactCount: number;
 	adeptCount: number;
 	artifacts: Artifact[];
+	arcaneStats: ArcaneStats;
+	arcaneTitle?: string | null;
 }
 
 export interface Note {

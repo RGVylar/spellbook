@@ -46,6 +46,12 @@ class InviteOut(CamelModel):
     used_at: datetime | None = None
 
 
+class ArcaneStats(CamelModel):
+    resonancia: float  # 0-100
+    estudio: float     # 0-100
+    estirpe: float     # 0-100
+
+
 class UserProfileOut(CamelModel):
     username: str
     role: str
@@ -54,3 +60,5 @@ class UserProfileOut(CamelModel):
     artifact_count: int
     adept_count: int
     artifacts: list
+    arcane_stats: ArcaneStats
+    arcane_title: str | None = None

@@ -1,11 +1,13 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { api } from '$lib/api';
+	import ArcaneRadar from '$lib/components/ArcaneRadar.svelte';
 	import Icon from '$lib/components/Icon.svelte';
+	import LineageTree from '$lib/components/LineageTree.svelte';
 	import MiniCard from '$lib/components/MiniCard.svelte';
 	import { auth } from '$lib/stores/auth.svelte';
 	import { moderation } from '$lib/stores/moderation.svelte';
-	import type { Invite, UserProfile } from '$lib/types';
+	import type { Invite, LineageNode, UserProfile } from '$lib/types';
 	import { arcaneTime } from '$lib/utils';
 
 	const ROLE_LABEL: Record<string, string> = { archimago: 'Archimago', mago: 'Mago', aprendiz: 'Aprendiz' };
@@ -20,6 +22,8 @@
 	let inviteError = $state('');
 	let copied = $state('');
 
+	let lineage = $state<LineageNode | null>(null);
+
 	const isOwn = $derived(auth.user?.username === username);
 
 	$effect(() => {
@@ -27,11 +31,16 @@
 		loading = true;
 		notFound = false;
 		profile = null;
+		lineage = null;
 		void api
 			.get<UserProfile>(`/users/${u}`)
 			.then((p) => (profile = p))
 			.catch(() => (notFound = true))
 			.finally(() => (loading = false));
+		void api
+			.get<LineageNode>(`/users/${u}/lineage`)
+			.then((l) => (lineage = l))
+			.catch(() => {});
 	});
 
 	$effect(() => {
@@ -91,9 +100,13 @@
 				<div class="glass sidebar-card">
 					<div class="avatar">{profile.glyph}</div>
 					<h1 class="profile-name">{profile.username}</h1>
-					<div class="eyebrow" class:archimago={profile.role === 'archimago'} style="margin-bottom: 18px">
+					<div class="eyebrow" class:archimago={profile.role === 'archimago'}>
 						{ROLE_LABEL[profile.role]}
 					</div>
+					{#if profile.arcaneTitle}
+						<div class="arcane-title">{profile.arcaneTitle}</div>
+					{/if}
+					<div style="margin-bottom: 18px"></div>
 
 					<div class="profile-stats">
 						<div class="pstat">
@@ -119,6 +132,12 @@
 							</button>
 						</div>
 					{/if}
+				</div>
+
+				<!-- Perfil arcano (radar) -->
+				<div class="glass sidebar-card" style="padding: 20px 16px 16px">
+					<div class="eyebrow" style="margin-bottom: 14px">Perfil arcano</div>
+					<ArcaneRadar stats={profile.arcaneStats} />
 				</div>
 
 				<!-- Invitaciones (solo perfil propio + moderador) -->
@@ -159,19 +178,32 @@
 				{/if}
 			</aside>
 
-			<!-- Artefactos -->
+			<!-- Columna principal -->
 			<main class="profile-main">
-				<div class="eyebrow" style="margin-bottom: 14px">Sus obras en el grimorio</div>
-				{#if profile.artifacts.length > 0}
-					<div class="mini-grid">
-						{#each profile.artifacts as art (art.id)}
-							<MiniCard {art} />
-						{/each}
-					</div>
-				{:else}
-					<div class="glass" style="border-radius: var(--r-lg); padding: 40px; text-align: center; color: var(--muted)">
-						El pergamino está en blanco.
-					</div>
+				<!-- Artefactos -->
+				<section>
+					<div class="eyebrow" style="margin-bottom: 14px">Sus obras en el grimorio</div>
+					{#if profile.artifacts.length > 0}
+						<div class="mini-grid">
+							{#each profile.artifacts as art (art.id)}
+								<MiniCard {art} />
+							{/each}
+						</div>
+					{:else}
+						<div class="glass" style="border-radius: var(--r-lg); padding: 40px; text-align: center; color: var(--muted)">
+							El pergamino está en blanco.
+						</div>
+					{/if}
+				</section>
+
+				<!-- Árbol de estirpe -->
+				{#if lineage}
+					<section style="margin-top: 32px">
+						<div class="eyebrow" style="margin-bottom: 14px">Árbol de estirpe</div>
+						<div class="glass" style="border-radius: var(--r-lg); padding: 24px">
+							<LineageTree root={lineage} />
+						</div>
+					</section>
 				{/if}
 			</main>
 		</div>

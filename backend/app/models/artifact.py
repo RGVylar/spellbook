@@ -94,3 +94,15 @@ class Note(Base):
 
     artifact: Mapped[Artifact] = relationship(back_populates="notes")
     user: Mapped["User"] = relationship()  # noqa: F821
+
+
+class ArtifactStudied(Base):
+    """Registra qué artefactos ha estudiado (visto) cada usuario. Base del score de Estudio."""
+
+    __tablename__ = "artifact_studied"
+    __table_args__ = (UniqueConstraint("artifact_id", "user_id"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    artifact_id: Mapped[str] = mapped_column(ForeignKey("artifacts.id", ondelete="CASCADE"), nullable=False)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    studied_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
